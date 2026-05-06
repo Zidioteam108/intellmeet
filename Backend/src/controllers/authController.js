@@ -152,10 +152,7 @@ const logout = async (req, res) => {
 
   if (token) {
     // Remove refresh token from database
-    await User.findOneAndUpdate(
-      { refreshToken: token },
-      { refreshToken: '' }
-    );
+    await User.findOneAndUpdate({ refreshToken: token }, { refreshToken: '' });
   }
 
   res.status(200).json({ success: true, message: 'Logged out successfully' });
