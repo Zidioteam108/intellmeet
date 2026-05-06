@@ -1,12 +1,12 @@
 require('dotenv').config();
 require('express-async-errors');
-
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const http = require('http');
 const { Server } = require('socket.io');
 const connectDB = require('./src/config/database');
+const authRoutes = require('./src/routes/authRoutes');
 
 const app = express();
 const server = http.createServer(app);
@@ -25,9 +25,10 @@ app.use(
     credentials: true
   })
 );
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
+// Routes
 app.get('/', (req, res) => {
   res.send('IntellMeet backend is running');
 });
@@ -41,6 +42,9 @@ app.get('/health', (req, res) => {
   });
 });
 
+app.use('/api/auth', authRoutes);
+
+// Socket.io
 io.on('connection', (socket) => {
   console.log(`🔌 User connected: ${socket.id}`);
 
@@ -49,6 +53,7 @@ io.on('connection', (socket) => {
   });
 });
 
+// Error handling
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(err.statusCode || 500).json({
