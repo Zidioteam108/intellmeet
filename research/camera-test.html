@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Camera Test — WebRTC getUserMedia</title>
+<style>
+body {
+font-family: Arial, sans-serif;
+display: flex;
+flex-direction: column;
+align-items: center;
+justify-content: center;
+min-height: 100vh;
+background: #111;
+color: white;
+margin: 0;
+}
+h1 { color: #4af; margin-bottom: 10px; }
+p  { color: #aaa; margin-bottom: 20px; font-size: 14px; }
+video {
+width: 640px;
+max-width: 100%;
+height: 480px;
+background: #000;
+border: 2px solid #4af;
+border-radius: 12px;
+}
+button {
+margin-top: 20px;
+padding: 10px 30px;
+background: #4af;
+color: #000;
+border: none;
+border-radius: 8px;
+font-size: 16px;
+font-weight: bold;
+cursor: pointer;
+}
+button:hover { background: #2af; }
+#status {
+margin-top: 15px;
+padding: 10px 20px;
+border-radius: 8px;
+font-size: 14px;
+}
+.success { background: #1a3; color: white; }
+.error   
+{ background: #a13; color: white; }
+.error   
+{ background: #a13; color: white; }
+</style>
+</head>
+<body>
+<h1> WebRTC Camera Test</h1>
+<p>Click the button below to request camera and microphone access</p>
+<video id="localVideo" autoplay muted playsinline></video>
+<button onclick="startCamera()">Start Camera</button>
+<button onclick="stopCamera()" style="background:#a33; color:white; margin-left:10px;">Stop Camera</button>
+<div id="status"></div>
+<script>
+let stream = null;
+async function startCamera() {
+const statusEl = document.getElementById('status');
+const videoEl = document.getElementById('localVideo');
+try {
+// This is the core WebRTC API — asks browser for camera + mic
+stream = await navigator.mediaDevices.getUserMedia({
+video: { width: 640, height: 480 },
+audio: true
+});
+// Connect the stream to the video element
+videoEl.srcObject = stream;
+statusEl.className = 'success';
+statusEl.textContent = ' Camera and microphone are working! Stream ID: ' + stream.id;
+// Log stream details to console for learning
+console.log('Stream object:', stream);
+console.log('Video tracks:', stream.getVideoTracks());
+console.log('Audio tracks:', stream.getAudioTracks());
+} catch (error) {
+statusEl.className = 'error';
+// Show specific error messages based on what went wrong
+if (error.name === 'NotAllowedError') {
+statusEl.textContent = ' Permission denied. Please allow camera access in your browser.';
+} else if (error.name === 'NotFoundError') {
+statusEl.textContent = ' No camera found. Please connect a webcam.';
+} else {
+statusEl.textContent = ' Error: ' + error.message;
+}
+console.error('getUserMedia error:', error);
+}
+}
+function stopCamera() {
+if (stream) {
+// Stop all tracks (turns off camera light)
+stream.getTracks().forEach(track => track.stop());
+document.getElementById('localVideo').srcObject = null;
+document.getElementById('status').textContent = ' Camera stopped.';
+document.getElementById('status').className = '';
+stream = null;
+}
+}
+</script>
+</script>
+</body>
+</html>

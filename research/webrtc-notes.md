@@ -63,3 +63,15 @@ If a direct connection fails (Symmetric NAT), a TURN server acts as a relay, pas
 ## 6. Useful Libraries
 - **Frontend**: Simple-WebRTC, PeerJS, Socket.io (for signaling).
 - **Backend (SFU)**: MediaSoup, Janus, Kurento, Jitsi.
+
+
+## Day 2 — getUserMedia() Test Results
+
+
+### Test Date: 07/05/2026
+
+### What I Learned:- getUserMedia() returns a Promise that resolves to a MediaStream object- The MediaStream contains video tracks and audio tracks separately- You must attach the stream to a <video> element using videoEl.srcObject = stream- Stopping each track individually is required to turn off the camera light- Errors: NotAllowedError = permission denied, NotFoundError = no camera
+
+### Stream Details Observed:- Stream ID: [paste from browser console]- Video track: [e.g., FaceTime HD Camera]- Audio track: [e.g., Built-in Microphone]
+
+### What RTCPeerConnection will do next (Day 4):- Take this same stream and send it to another browser- The STUN server (stun:stun.l.google.com:19302) helps both browsers find each other- Socket.io (from backend) will carry the "offer" and "answer" signals
