@@ -48,7 +48,7 @@ const DashboardLayout = ({ children }: Props) => {
   }
 
   return (
-    <div className="flex h-screen bg-[#f8fafc] overflow-hidden font-sans">
+    <div className="flex h-screen bg-[#f8fafc] overflow-hidden font-sans w-full max-w-[100vw]">
       
       {/* Background Gradients */}
       <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-indigo-100/30 rounded-full blur-[140px] -z-10 opacity-60"></div>
@@ -133,7 +133,7 @@ const DashboardLayout = ({ children }: Props) => {
       </aside>
 
       {/* ── MAIN CONTENT ────────────────────────────────── */}
-      <div className="flex-1 flex flex-col overflow-hidden relative">
+      <div className="flex-1 flex flex-col overflow-hidden relative w-full min-w-0">
         
         {/* Top Navbar */}
         <header className={`h-20 lg:h-24 flex items-center justify-between px-4 lg:px-10 z-20 transition-all duration-500 ${scrolled ? 'bg-white/80 backdrop-blur-xl border-b border-slate-200 shadow-sm' : 'bg-transparent'}`}>
