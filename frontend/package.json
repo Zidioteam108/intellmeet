@@ -11,12 +11,15 @@
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.2.4",
+    "axios": "^1.16.0",
     "clsx": "^2.1.1",
-    "lucide-react": "^1.14.0",
+    "framer-motion": "^12.38.0",
+    "lucide-react": "^0.475.0",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
     "react-router-dom": "^7.15.0",
-    "tailwind-merge": "^3.5.0"
+    "tailwind-merge": "^3.5.0",
+    "zustand": "^5.0.13"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
