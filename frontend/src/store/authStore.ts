@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { persist, createJSONStorage } from 'zustand/middleware'
 
 interface User {
   id: string
@@ -18,19 +19,27 @@ interface AuthState {
   updateUser: (updates: Partial<User>) => void
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
-  user: null,
-  accessToken: null,
-  isAuthenticated: false,
+export const useAuthStore = create<AuthState>()(
+  persist(
+    (set) => ({
+      user: null,
+      accessToken: null,
+      isAuthenticated: false,
 
-  setAuth: (user, accessToken) =>
-    set({ user, accessToken, isAuthenticated: true }),
+      setAuth: (user, accessToken) =>
+        set({ user, accessToken, isAuthenticated: true }),
 
-  clearAuth: () =>
-    set({ user: null, accessToken: null, isAuthenticated: false }),
+      clearAuth: () =>
+        set({ user: null, accessToken: null, isAuthenticated: false }),
 
-  updateUser: (updates) =>
-    set((state) => ({
-      user: state.user ? { ...state.user, ...updates } : null,
-    })),
-}))
+      updateUser: (updates) =>
+        set((state) => ({
+          user: state.user ? { ...state.user, ...updates } : null,
+        })),
+    }),
+    {
+      name: 'intellmeet-auth',
+      storage: createJSONStorage(() => localStorage),
+    }
+  )
+)
