@@ -44,7 +44,7 @@ const DashboardLayout = ({ children }: Props) => {
 
   const handleLogout = () => {
     clearAuth()
-    navigate('/login')
+    navigate('/')
   }
 
   return (
@@ -137,7 +137,12 @@ const DashboardLayout = ({ children }: Props) => {
         
         {/* Top Navbar */}
         <header className={`h-20 lg:h-24 flex items-center justify-between px-4 lg:px-10 z-20 transition-all duration-500 ${scrolled ? 'bg-white/80 backdrop-blur-xl border-b border-slate-200 shadow-sm' : 'bg-transparent'}`}>
-          <div className="flex items-center gap-8">
+          <div className="flex items-center gap-4 lg:gap-8">
+            {/* Mobile Logo */}
+            <Link to="/" className="lg:hidden flex items-center">
+              <img src={logo} alt="IntellMeet" className="h-10 w-auto object-contain hover:scale-105 transition-standard" />
+            </Link>
+
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
               className="hidden lg:flex p-3 rounded-2xl bg-white border border-slate-200 text-slate-500 hover:text-indigo-600 hover:border-indigo-100 hover:bg-indigo-50 transition-all duration-300 shadow-sm"

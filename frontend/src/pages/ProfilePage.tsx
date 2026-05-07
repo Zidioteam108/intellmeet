@@ -3,7 +3,7 @@ import { useAuthStore } from '@/store/authStore'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Camera, Mail, User as UserIcon, Shield, Sparkles, CheckCircle2, ChevronRight, AlertCircle } from 'lucide-react'
+import { Camera, Mail, User as UserIcon, Shield, Sparkles, CheckCircle2, ChevronRight, AlertCircle, LogOut } from 'lucide-react'
 
 const ProfilePage = () => {
   const { user, updateUser } = useAuthStore()
@@ -59,6 +59,18 @@ const ProfilePage = () => {
           <h1 className="text-4xl font-extrabold text-slate-900 tracking-tight">My Profile</h1>
           <p className="text-slate-500 font-medium mt-2 text-lg">Manage your personal presence and account settings.</p>
         </div>
+
+        <Button 
+          onClick={() => {
+            const { clearAuth } = useAuthStore.getState()
+            clearAuth()
+            window.location.href = '/'
+          }}
+          className="bg-red-50 hover:bg-red-100 text-red-600 border border-red-100 px-8 py-7 rounded-2xl font-black text-sm flex items-center gap-3 transition-standard active:scale-95 shadow-sm"
+        >
+          <LogOut className="w-5 h-5" />
+          LOGOUT SESSION
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
