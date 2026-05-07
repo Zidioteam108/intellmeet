@@ -54,11 +54,19 @@ const DashboardLayout = ({ children }: Props) => {
       <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-indigo-100/30 rounded-full blur-[140px] -z-10 opacity-60"></div>
       <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-purple-100/20 rounded-full blur-[120px] -z-10 opacity-50"></div>
 
+      {/* Sidebar Overlay (Mobile) */}
+      {sidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-40 lg:hidden transition-opacity duration-500"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
       {/* ── SIDEBAR ─────────────────────────────────────── */}
       <aside
-        className={`${
-          sidebarOpen ? 'w-72' : 'w-24'
-        } bg-white/80 backdrop-blur-xl border-r border-slate-200 flex flex-col transition-all duration-500 ease-in-out z-30 shadow-2xl shadow-indigo-500/5`}
+        className={`fixed inset-y-0 left-0 lg:relative ${
+          sidebarOpen ? 'w-72 translate-x-0' : 'w-72 lg:w-24 -translate-x-full lg:translate-x-0'
+        } bg-white/95 lg:bg-white/80 backdrop-blur-xl border-r border-slate-200 flex flex-col transition-all duration-500 ease-in-out z-50 lg:z-30 shadow-2xl shadow-indigo-500/5`}
       >
         {/* Logo Area */}
         <div className="h-24 flex items-center px-8 mb-4">
@@ -128,7 +136,7 @@ const DashboardLayout = ({ children }: Props) => {
       <div className="flex-1 flex flex-col overflow-hidden relative">
         
         {/* Top Navbar */}
-        <header className={`h-24 flex items-center justify-between px-10 z-20 transition-all duration-500 ${scrolled ? 'bg-white/80 backdrop-blur-xl border-b border-slate-200 shadow-sm' : 'bg-transparent'}`}>
+        <header className={`h-20 lg:h-24 flex items-center justify-between px-4 lg:px-10 z-20 transition-all duration-500 ${scrolled ? 'bg-white/80 backdrop-blur-xl border-b border-slate-200 shadow-sm' : 'bg-transparent'}`}>
           <div className="flex items-center gap-8">
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -186,8 +194,8 @@ const DashboardLayout = ({ children }: Props) => {
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 overflow-y-auto p-10 custom-scrollbar relative z-10">
-          <div className="max-w-7xl mx-auto">
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-10 custom-scrollbar relative z-10">
+          <div className="max-w-7xl mx-auto pb-20">
             {children}
           </div>
         </main>
