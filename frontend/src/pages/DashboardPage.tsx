@@ -100,24 +100,26 @@ const DashboardPage = () => {
               <span className="text-indigo-400">for Q3 Marketing Sprint</span>
             </h2>
             
-            <div className="flex flex-wrap items-center gap-8 mt-auto">
-              <div className="flex items-center gap-3 text-indigo-100 font-bold">
-                <div className="p-2 bg-white/5 rounded-lg">
-                  <Clock className="w-5 h-5 text-indigo-400" />
-                </div>
-                <span>45 minutes</span>
-              </div>
-              <div className="flex -space-x-3">
-                {[1, 2, 3, 4].map(i => (
-                  <div key={i} className="w-12 h-12 rounded-2xl border-4 border-slate-900 bg-slate-800 flex items-center justify-center overflow-hidden hover:scale-110 transition-transform cursor-pointer">
-                    <img src={`https://i.pravatar.cc/150?u=${i + 20}`} alt="user" />
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-8 mt-auto">
+              <div className="flex flex-wrap items-center gap-6">
+                <div className="flex items-center gap-3 text-indigo-100 font-bold">
+                  <div className="p-2 bg-white/5 rounded-lg">
+                    <Clock className="w-5 h-5 text-indigo-400" />
                   </div>
-                ))}
-                <div className="w-12 h-12 rounded-2xl border-4 border-slate-900 bg-indigo-600 text-white text-xs font-black flex items-center justify-center">
-                  +8
+                  <span className="text-sm">45 minutes</span>
+                </div>
+                <div className="flex -space-x-3">
+                  {[1, 2, 3, 4].map(i => (
+                    <div key={i} className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl border-4 border-slate-900 bg-slate-800 flex items-center justify-center overflow-hidden hover:scale-110 transition-transform cursor-pointer">
+                      <img src={`https://i.pravatar.cc/150?u=${i + 20}`} alt="user" />
+                    </div>
+                  ))}
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl border-4 border-slate-900 bg-indigo-600 text-white text-[10px] sm:text-xs font-black flex items-center justify-center">
+                    +8
+                  </div>
                 </div>
               </div>
-              <button className="ml-auto px-10 py-5 bg-white text-slate-900 rounded-2xl font-black shadow-xl hover:scale-105 transition-standard flex items-center gap-3">
+              <button className="w-full sm:w-auto px-8 py-4 sm:px-10 sm:py-5 bg-white text-slate-900 rounded-2xl font-black shadow-xl hover:scale-105 transition-standard flex items-center justify-center gap-3">
                 <PlayCircle className="w-6 h-6 text-indigo-600" />
                 JOIN MEETING
               </button>
