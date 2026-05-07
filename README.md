@@ -272,13 +272,13 @@ kubectl apply -f kubernetes/
 
 ---
 
-# 📸 Screenshots
+| Landing Page | Login Page |
+|--------------|------------|
+| ![Landing Page](./screenshots/landing_page.png) | ![Login Page](./screenshots/login_page.png) |
 
-> Add your application screenshots here
-
-| Dashboard | Video Meeting | AI Summary |
-|-----------|---------------|------------|
-| ![img](./screenshots/dashboard.png) | ![img](./screenshots/meeting.png) | ![img](./screenshots/summary.png) |
+| Signup Page | Dashboard |
+|-------------|-----------|
+| ![Signup Page](./screenshots/signup_page.png) | ![Dashboard](./screenshots/dashboard.png) |
 
 ---
 
