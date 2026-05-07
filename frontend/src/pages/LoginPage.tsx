@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import axios from 'axios'
+import api from '@/lib/api'
 import { useAuthStore } from '@/store/authStore'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
+import { Mail, Lock, ArrowRight, Sparkles, ShieldCheck } from 'lucide-react'
+import logo from '@/assets/logo.png'
 
 const LoginPage = () => {
   const navigate = useNavigate()
@@ -19,7 +20,6 @@ const LoginPage = () => {
     e.preventDefault()
     setError('')
 
-    // Basic validation
     if (!email || !password) {
       setError('Please fill in all fields')
       return
@@ -27,10 +27,10 @@ const LoginPage = () => {
 
     setIsLoading(true)
     try {
-      const response = await axios.post('http://localhost:5000/api/auth/login', {
+      const response = await api.post('/auth/login', {
         email,
         password,
-      }, { withCredentials: true })
+      })
 
       const { user, token } = response.data
       setAuth(user, token)
@@ -43,91 +43,143 @@ const LoginPage = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen flex bg-[#fbfbfe] font-sans overflow-hidden">
+      
+      {/* Background Decorative Elements */}
+      <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-indigo-100/50 blur-[120px] -z-10 animate-pulse"></div>
+      <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-purple-100/40 blur-[120px] -z-10"></div>
 
-        {/* Logo */}
-        <div className="text-center mb-10">
-          <img 
-            src="/src/assets/logo.png" 
-            alt="IntellMeet Logo" 
-            className="h-32 mx-auto mb-4 object-contain"
-          />
-          <p className="text-gray-600 text-lg font-medium">AI-Powered Meeting Platform</p>
+      {/* Left Side - Visual Content (Desktop Only) */}
+      <div className="hidden lg:flex lg:w-1/2 relative flex-col justify-between p-16">
+        <div className="flex items-center">
+          <Link to="/">
+            <img src={logo} alt="IntellMeet" className="h-16 w-auto object-contain hover:scale-105 transition-standard" />
+          </Link>
         </div>
 
-        {/* Card */}
-        <Card className="shadow-lg">
-          <CardHeader>
-            <CardTitle className="text-2xl">Welcome back</CardTitle>
-            <CardDescription>Enter your credentials to access your account</CardDescription>
-          </CardHeader>
+        <div className="relative z-10 max-w-lg">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/50 backdrop-blur-md border border-white text-indigo-600 text-xs font-black uppercase tracking-widest mb-8 shadow-sm">
+            <Sparkles className="w-4 h-4 text-indigo-500" />
+            AI-Driven Intelligence
+          </div>
+          <h1 className="text-6xl font-black text-slate-900 leading-[1.1] mb-8 tracking-tight">
+            Unlock the power of <br />
+            <span className="text-gradient-ai">your meetings.</span>
+          </h1>
+          <p className="text-xl text-slate-500 font-medium leading-relaxed">
+            Sign in to access your AI summaries, tasks, and meeting analytics.
+          </p>
+        </div>
 
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="flex items-center gap-8 text-slate-400">
+          <div className="flex items-center gap-2 text-sm font-bold">
+            <ShieldCheck className="w-5 h-5 text-indigo-400" />
+            SOC2 Compliant
+          </div>
+          <div className="flex items-center gap-2 text-sm font-bold">
+            <ShieldCheck className="w-5 h-5 text-indigo-400" />
+            End-to-End Encrypted
+          </div>
+        </div>
+      </div>
 
-              {/* Error Message */}
+      {/* Right Side - Login Form */}
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-12 relative">
+        
+        <div className="w-full max-w-md">
+          
+          {/* Mobile Logo Only */}
+          <div className="lg:hidden flex flex-col items-center mb-12">
+            <Link to="/">
+              <img src={logo} alt="IntellMeet" className="h-16 w-auto object-contain" />
+            </Link>
+          </div>
+
+          <div className="glass-card rounded-[3rem] p-10 sm:p-12 shadow-2xl shadow-indigo-100 border-white/50 relative">
+            
+            {/* LARGE LOGO (Desktop) */}
+            <div className="hidden lg:flex justify-center mb-10">
+              <Link to="/">
+                <img src={logo} alt="IntellMeet" className="h-20 w-auto object-contain hover:scale-110 transition-standard" />
+              </Link>
+            </div>
+
+            <div className="text-center lg:text-left mb-10">
+              <h2 className="text-3xl font-black text-slate-900 mb-3 tracking-tight">Welcome back</h2>
+              <p className="text-slate-500 font-medium">Continue your meeting journey with AI</p>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-6">
+              
               {error && (
-                <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md text-sm">
+                <div className="bg-red-50 border border-red-100 text-red-600 px-5 py-4 rounded-2xl text-sm font-bold flex items-center gap-3 animate-shake">
+                  <div className="w-2 h-2 rounded-full bg-red-600 animate-pulse"></div>
                   {error}
                 </div>
               )}
 
-              {/* Email Field */}
               <div className="space-y-2">
-                <Label htmlFor="email">Email address</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="you@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  autoComplete="email"
-                />
-              </div>
-
-              {/* Password Field */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="password">Password</Label>
-                  <span className="text-sm text-blue-600 cursor-pointer hover:underline">
-                    Forgot password?
-                  </span>
+                <Label htmlFor="email" className="text-slate-700 font-bold ml-1 text-sm">Email address</Label>
+                <div className="relative group">
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-indigo-600 transition-colors" />
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="you@company.com"
+                    className="pl-12 py-7 bg-white/50 border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-standard font-medium placeholder:text-slate-300"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                  />
                 </div>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="Enter your password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  autoComplete="current-password"
-                />
               </div>
 
-              {/* Submit Button */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between ml-1">
+                  <Label htmlFor="password" title="Password" className="text-slate-700 font-bold text-sm">Password</Label>
+                  <Link to="/forgot-password" title="Forgot Password" className="text-xs font-black text-indigo-600 hover:text-indigo-700 uppercase tracking-widest transition-standard">
+                    Forgot?
+                  </Link>
+                </div>
+                <div className="relative group">
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-indigo-600 transition-colors" />
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="••••••••"
+                    className="pl-12 py-7 bg-white/50 border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-standard font-medium placeholder:text-slate-300"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                  />
+                </div>
+              </div>
+
               <Button
                 type="submit"
-                className="w-full"
+                className="w-full py-8 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-black text-lg shadow-xl shadow-indigo-100 transition-standard group relative overflow-hidden"
                 disabled={isLoading}
               >
-                {isLoading ? 'Signing in...' : 'Sign in'}
+                <span className="relative z-10 flex items-center justify-center gap-2">
+                  {isLoading ? 'Authenticating...' : (
+                    <>
+                      Sign in to Dashboard
+                      <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
+                    </>
+                  )}
+                </span>
+                <div className="absolute inset-0 bg-gradient-to-r from-indigo-600 to-purple-600 opacity-0 group-hover:opacity-100 transition-opacity"></div>
               </Button>
-
             </form>
-          </CardContent>
 
-          <CardFooter className="justify-center">
-            <p className="text-sm text-gray-500">
-              Don't have an account?{' '}
-              <Link to="/signup" className="text-blue-600 font-medium hover:underline">
-                Create one
+            <p className="mt-10 text-center text-slate-500 font-medium">
+              New to IntellMeet?{' '}
+              <Link to="/signup" className="text-indigo-600 font-black hover:text-indigo-700 transition-standard border-b-2 border-indigo-100 hover:border-indigo-600">
+                Create free account
               </Link>
             </p>
-          </CardFooter>
-        </Card>
-
+          </div>
+        </div>
       </div>
     </div>
   )
