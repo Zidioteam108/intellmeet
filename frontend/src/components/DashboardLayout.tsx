@@ -48,7 +48,7 @@ const DashboardLayout = ({ children }: Props) => {
   }
 
   return (
-    <div className="flex h-screen bg-[#f8fafc] overflow-hidden font-sans w-full max-w-[100vw]">
+    <div className="flex h-screen bg-[#f8fafc] overflow-x-hidden font-sans w-screen max-w-full relative touch-pan-y overscroll-none">
       
       {/* Background Gradients */}
       <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-indigo-100/30 rounded-full blur-[140px] -z-10 opacity-60"></div>
