@@ -200,34 +200,35 @@ const DashboardLayout = ({ children }: Props) => {
           </div>
         </main>
 
-        {/* ── MOBILE BOTTOM NAVIGATION (Fixed to edge) ── */}
-        <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-slate-200 h-20 px-4 animate-in slide-in-from-bottom-20 duration-500">
-          <nav className="h-full flex items-center justify-around">
-            {navItems.map((item) => {
-              const Icon = item.icon
-              const isActive = location.pathname === item.path
-              return (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  className={`relative flex flex-col items-center justify-center w-full h-full transition-all duration-500 ${
-                    isActive 
-                      ? 'text-indigo-600' 
-                      : 'text-slate-400'
-                  }`}
-                >
-                  <Icon className={`w-6 h-6 ${isActive ? 'stroke-[2.5px]' : 'stroke-2'} transition-all`} />
-                  <span className={`text-[10px] font-black uppercase tracking-tighter mt-1`}>
-                     {item.label}
-                  </span>
-                  {isActive && (
-                    <div className="absolute top-0 w-1/2 h-1 bg-indigo-600 rounded-b-full shadow-[0_0_10px_rgba(79,70,229,0.5)]" />
-                  )}
-                </Link>
-              )
-            })}
-          </nav>
-        </div>
+      </div>
+
+      {/* ── MOBILE BOTTOM NAVIGATION (Fixed to edge) ── */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-[100] bg-white border-t border-slate-200 h-20 px-4 pb-safe animate-in slide-in-from-bottom-20 duration-500 shadow-[0_-10px_30px_rgba(0,0,0,0.05)]">
+        <nav className="h-full flex items-center justify-around">
+          {navItems.map((item) => {
+            const Icon = item.icon
+            const isActive = location.pathname === item.path
+            return (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={`relative flex flex-col items-center justify-center w-full h-full transition-all duration-500 ${
+                  isActive 
+                    ? 'text-indigo-600' 
+                    : 'text-slate-400'
+                }`}
+              >
+                <Icon className={`w-6 h-6 ${isActive ? 'stroke-[2.5px]' : 'stroke-2'} transition-all`} />
+                <span className={`text-[10px] font-black uppercase tracking-tighter mt-1`}>
+                   {item.label}
+                </span>
+                {isActive && (
+                  <div className="absolute top-0 w-1/2 h-1 bg-indigo-600 rounded-b-full shadow-[0_0_10px_rgba(79,70,229,0.5)]" />
+                )}
+              </Link>
+            )
+          })}
+        </nav>
       </div>
     </div>
   )
