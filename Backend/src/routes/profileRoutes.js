@@ -4,6 +4,7 @@ const { getProfile, updateProfile, uploadAvatar } = require('../controllers/prof
 const { protect } = require('../middleware/authMiddleware');
 const { uploadAvatar: uploadMiddleware } = require('../config/cloudinary');
 
+// All profile routes require authentication
 router.use(protect);
 
 router.get('/me', getProfile);
