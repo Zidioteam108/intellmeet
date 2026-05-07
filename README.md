@@ -150,6 +150,22 @@ npm run dev
 
 > **Note:** The frontend usually runs on `http://localhost:5174` (or 5173 depending on availability).
 
+## 🚀 Deployment (Vercel)
+
+### 1. Frontend
+1. Connect your repository to Vercel.
+2. Set the **Root Directory** to `frontend`.
+3. Add Environment Variable: `VITE_API_URL` (URL of your deployed backend).
+4. Deploy.
+
+### 2. Backend
+1. Connect your repository to Vercel (new project).
+2. Set the **Root Directory** to `Backend`.
+3. Add Environment Variables from `.env`.
+4. Deploy.
+
+> **⚠️ Note on Socket.io:** Vercel uses Serverless Functions. Real-time features (Socket.io) may require a persistent host like **Render** or **Railway** for optimal performance.
+
 ---
 
 # 💡 Development Mode: Mock Auth
