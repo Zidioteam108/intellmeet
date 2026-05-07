@@ -128,7 +128,7 @@ const LoginPage = () => {
                     placeholder="you@company.com"
                     className="pl-12 py-7 bg-white/50 border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-standard font-medium placeholder:text-slate-300"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
                     required
                   />
                 </div>
@@ -149,7 +149,7 @@ const LoginPage = () => {
                     placeholder="••••••••"
                     className="pl-12 py-7 bg-white/50 border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-standard font-medium placeholder:text-slate-300"
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
                     required
                   />
                 </div>

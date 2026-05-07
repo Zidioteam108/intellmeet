@@ -37,9 +37,10 @@ const ProfilePage = () => {
       return
     }
 
-    setIsLoading(true)
+    setIsSaving(true)
     // Simulated API call - Logic will be on Day 9
     setTimeout(() => {
+      console.log('Avatar file ready for upload:', avatarFile)
       updateUser({ name: name.trim(), bio: bio.trim() })
       setSuccessMsg('Profile settings updated successfully.')
       setIsSaving(false)
@@ -141,7 +142,7 @@ const ProfilePage = () => {
                       type="text"
                       className="pl-12 py-7 bg-slate-50/50 border-slate-200 rounded-2xl focus:ring-indigo-500 transition-standard font-medium"
                       value={name}
-                      onChange={(e) => setName(e.target.value)}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setName(e.target.value)}
                     />
                   </div>
                 </div>
@@ -168,7 +169,7 @@ const ProfilePage = () => {
                   className="w-full p-5 bg-slate-50/50 border border-slate-200 rounded-[2rem] focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-standard font-medium min-h-[140px] resize-none placeholder:text-slate-400"
                   placeholder="Tell your team about yourself..."
                   value={bio}
-                  onChange={(e) => setBio(e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setBio(e.target.value)}
                   maxLength={200}
                 />
                 <div className="flex justify-end pr-4">

@@ -104,7 +104,7 @@ const SignupPage = () => {
                     placeholder="John Doe"
                     className="pl-12 py-6 bg-white/50 border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-standard font-medium"
                     value={name}
-                    onChange={(e) => setName(e.target.value)}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setName(e.target.value)}
                     required
                   />
                 </div>
@@ -120,7 +120,7 @@ const SignupPage = () => {
                     placeholder="you@example.com"
                     className="pl-12 py-6 bg-white/50 border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-standard font-medium"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
                     required
                   />
                 </div>
@@ -137,7 +137,7 @@ const SignupPage = () => {
                       placeholder="••••••••"
                       className="pl-12 py-6 bg-white/50 border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-standard font-medium"
                       value={password}
-                      onChange={(e) => setPassword(e.target.value)}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
                       required
                     />
                   </div>
@@ -153,7 +153,7 @@ const SignupPage = () => {
                       placeholder="••••••••"
                       className="pl-12 py-6 bg-white/50 border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-standard font-medium"
                       value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setConfirmPassword(e.target.value)}
                       required
                     />
                   </div>
