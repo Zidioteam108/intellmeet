@@ -3,7 +3,6 @@ import { useAuthStore } from '@/store/authStore'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Camera, Mail, User as UserIcon, Shield, Sparkles, CheckCircle2, ChevronRight, AlertCircle } from 'lucide-react'
 
 const ProfilePage = () => {
