@@ -139,14 +139,10 @@ The AI engine significantly reduces manual note-taking and improves productivity
 ```bash
 IntellMeet/
 │
-├── client/                 # Frontend Application
-├── server/                 # Backend Application
-├── docs/                   # Documentation
-├── screenshots/            # Project Images
-├── docker/                 # Docker Configurations
-├── kubernetes/             # K8s Deployment Files
-├── .github/workflows/      # GitHub Actions
-└── README.md
+├── frontend/               # Frontend Application (React + Vite)
+├── Backend/                # Backend Application (Node.js + Express)
+├── README.md
+└── ...
 ```
 
 ---
@@ -156,7 +152,7 @@ IntellMeet/
 ## 1️⃣ Clone Repository
 
 ```bash
-git clone https://github.com/your-username/intellmeet.git
+git clone https://github.com/Zidioteam108/intellmeet.git
 cd intellmeet
 ```
 
@@ -167,14 +163,14 @@ cd intellmeet
 ### Frontend
 
 ```bash
-cd client
+cd frontend
 npm install
 ```
 
 ### Backend
 
 ```bash
-cd ../server
+cd ../Backend
 npm install
 ```
 
@@ -182,22 +178,14 @@ npm install
 
 # 🛠️ Environment Variables
 
-Create a `.env` file inside the server folder.
+Create a `.env` file inside the **Backend** folder.
 
 ```env
 PORT=5000
-
-MONGO_URI=your_mongodb_uri
-
+NODE_ENV=development
+MONGODB_URI=your_mongodb_uri
 JWT_SECRET=your_secret_key
-
-OPENAI_API_KEY=your_openai_api_key
-
-REDIS_URL=your_redis_url
-
-CLOUDINARY_CLOUD_NAME=your_cloud_name
-CLOUDINARY_API_KEY=your_api_key
-CLOUDINARY_API_SECRET=your_api_secret
+CLIENT_URL=http://localhost:5174
 ```
 
 ---
@@ -207,14 +195,14 @@ CLOUDINARY_API_SECRET=your_api_secret
 ## Start Backend
 
 ```bash
-cd server
-npm run dev
+cd Backend
+npm start
 ```
 
 ## Start Frontend
 
 ```bash
-cd client
+cd frontend
 npm run dev
 ```
 
@@ -224,8 +212,13 @@ npm run dev
 
 | Service | URL |
 |---------|-----|
-| Frontend | http://localhost:5173 |
+| Frontend | http://localhost:5174 |
 | Backend API | http://localhost:5000 |
+
+---
+
+# 💡 Development Note: Mock Auth Mode
+If the backend is not yet connected or running, the frontend includes a **Mock Auth Fallback**. You can "Sign In" or "Sign Up" with any credentials to explore the premium Dashboard UI immediately.
 
 ---
 
