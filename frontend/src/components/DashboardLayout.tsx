@@ -200,9 +200,9 @@ const DashboardLayout = ({ children }: Props) => {
           </div>
         </main>
 
-        {/* ── MOBILE BOTTOM NAVIGATION ───────────────────── */}
-        <div className="lg:hidden fixed bottom-0 left-0 right-0 px-6 pb-8 z-50 pointer-events-none">
-          <nav className="mx-auto w-full max-w-[420px] h-20 bg-white/95 backdrop-blur-3xl border border-white/50 shadow-[0_25px_60px_rgba(79,70,229,0.25)] rounded-[2.5rem] flex items-center justify-around px-4 pointer-events-auto animate-in slide-in-from-bottom-20 duration-1000">
+        {/* ── MOBILE BOTTOM NAVIGATION (Fixed to edge) ── */}
+        <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-slate-200 h-20 px-4 animate-in slide-in-from-bottom-20 duration-500">
+          <nav className="h-full flex items-center justify-around">
             {navItems.map((item) => {
               const Icon = item.icon
               const isActive = location.pathname === item.path
@@ -210,18 +210,18 @@ const DashboardLayout = ({ children }: Props) => {
                 <Link
                   key={item.path}
                   to={item.path}
-                  className={`relative flex flex-col items-center justify-center w-14 h-14 rounded-2xl transition-all duration-500 ${
+                  className={`relative flex flex-col items-center justify-center w-full h-full transition-all duration-500 ${
                     isActive 
-                      ? 'text-indigo-600 scale-110' 
+                      ? 'text-indigo-600' 
                       : 'text-slate-400'
                   }`}
                 >
                   <Icon className={`w-6 h-6 ${isActive ? 'stroke-[2.5px]' : 'stroke-2'} transition-all`} />
-                  <span className={`text-[8px] font-black uppercase tracking-tighter mt-1 ${isActive ? 'opacity-100' : 'opacity-0 h-0 overflow-hidden'}`}>
+                  <span className={`text-[10px] font-black uppercase tracking-tighter mt-1`}>
                      {item.label}
                   </span>
                   {isActive && (
-                    <div className="absolute -bottom-1 w-1 h-1 bg-indigo-600 rounded-full shadow-[0_0_10px_rgba(79,70,229,1)]" />
+                    <div className="absolute top-0 w-1/2 h-1 bg-indigo-600 rounded-b-full shadow-[0_0_10px_rgba(79,70,229,0.5)]" />
                   )}
                 </Link>
               )
