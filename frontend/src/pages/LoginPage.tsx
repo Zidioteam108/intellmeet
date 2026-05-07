@@ -1,11 +1,15 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+import axios from 'axios'
+import { useAuthStore } from '@/store/authStore'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 
 const LoginPage = () => {
+  const navigate = useNavigate()
+  const { setAuth } = useAuthStore()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
@@ -22,9 +26,20 @@ const LoginPage = () => {
     }
 
     setIsLoading(true)
-    // API call will be connected on Day 9
-    console.log('Login attempt:', { email, password })
-    setTimeout(() => setIsLoading(false), 1000) // Fake loading for now
+    try {
+      const response = await axios.post('http://localhost:5000/api/auth/login', {
+        email,
+        password,
+      }, { withCredentials: true })
+
+      const { user, token } = response.data
+      setAuth(user, token)
+      navigate('/dashboard')
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Login failed. Please check your credentials.')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
