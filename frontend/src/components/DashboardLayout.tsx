@@ -194,36 +194,40 @@ const DashboardLayout = ({ children }: Props) => {
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-10 custom-scrollbar relative z-10 pb-32 lg:pb-10">
-          <div className="max-w-7xl mx-auto">
+        <main className="flex-1 overflow-y-auto px-4 py-8 sm:p-6 lg:p-10 custom-scrollbar relative z-10 pb-40 lg:pb-10">
+          <div className="w-full max-w-7xl mx-auto">
             {children}
           </div>
         </main>
 
         {/* ── MOBILE BOTTOM NAVIGATION ───────────────────── */}
-        <nav className="fixed bottom-6 left-6 right-6 h-20 bg-white/80 backdrop-blur-2xl border border-white/20 rounded-[2.5rem] shadow-2xl shadow-indigo-500/20 z-50 flex items-center justify-around px-2 lg:hidden animate-in slide-in-from-bottom-10 duration-700">
-          {navItems.map((item) => {
-            const Icon = item.icon
-            const isActive = location.pathname === item.path
-            return (
-              <Link
-                key={item.path}
-                to={item.path}
-                className={`flex flex-col items-center justify-center gap-1.5 w-16 h-16 rounded-2xl transition-all duration-300 ${
-                  isActive 
-                    ? 'text-indigo-600 bg-indigo-50/50' 
-                    : 'text-slate-400 hover:text-slate-600'
-                }`}
-              >
-                <Icon className={`w-6 h-6 ${isActive ? 'scale-110' : ''} transition-transform duration-300`} />
-                <span className={`text-[10px] font-black uppercase tracking-widest ${isActive ? 'opacity-100' : 'opacity-0 h-0 overflow-hidden'} transition-all`}>
-                   {item.label}
-                </span>
-                {isActive && <div className="w-1.5 h-1.5 bg-indigo-600 rounded-full mt-0.5 shadow-lg shadow-indigo-500/50" />}
-              </Link>
-            )
-          })}
-        </nav>
+        <div className="lg:hidden fixed bottom-0 left-0 right-0 px-6 pb-8 z-50 pointer-events-none">
+          <nav className="mx-auto w-full max-w-[420px] h-20 bg-white/95 backdrop-blur-3xl border border-white/50 shadow-[0_25px_60px_rgba(79,70,229,0.25)] rounded-[2.5rem] flex items-center justify-around px-4 pointer-events-auto animate-in slide-in-from-bottom-20 duration-1000">
+            {navItems.map((item) => {
+              const Icon = item.icon
+              const isActive = location.pathname === item.path
+              return (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  className={`relative flex flex-col items-center justify-center w-14 h-14 rounded-2xl transition-all duration-500 ${
+                    isActive 
+                      ? 'text-indigo-600 scale-110' 
+                      : 'text-slate-400'
+                  }`}
+                >
+                  <Icon className={`w-6 h-6 ${isActive ? 'stroke-[2.5px]' : 'stroke-2'} transition-all`} />
+                  <span className={`text-[8px] font-black uppercase tracking-tighter mt-1 ${isActive ? 'opacity-100' : 'opacity-0 h-0 overflow-hidden'}`}>
+                     {item.label}
+                  </span>
+                  {isActive && (
+                    <div className="absolute -bottom-1 w-1 h-1 bg-indigo-600 rounded-full shadow-[0_0_10px_rgba(79,70,229,1)]" />
+                  )}
+                </Link>
+              )
+            })}
+          </nav>
+        </div>
       </div>
     </div>
   )
