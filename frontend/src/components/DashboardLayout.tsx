@@ -62,9 +62,9 @@ const DashboardLayout = ({ children }: Props) => {
         />
       )}
 
-      {/* ── SIDEBAR ─────────────────────────────────────── */}
+      {/* ── SIDEBAR (Desktop Only) ────────────────────── */}
       <aside
-        className={`fixed inset-y-0 left-0 lg:relative ${
+        className={`hidden lg:flex fixed inset-y-0 left-0 lg:relative ${
           sidebarOpen ? 'w-72 translate-x-0' : 'w-72 lg:w-24 -translate-x-full lg:translate-x-0'
         } bg-white/95 lg:bg-white/80 backdrop-blur-xl border-r border-slate-200 flex flex-col transition-all duration-500 ease-in-out z-50 lg:z-30 shadow-2xl shadow-indigo-500/5`}
       >
@@ -140,7 +140,7 @@ const DashboardLayout = ({ children }: Props) => {
           <div className="flex items-center gap-8">
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="p-3 rounded-2xl bg-white border border-slate-200 text-slate-500 hover:text-indigo-600 hover:border-indigo-100 hover:bg-indigo-50 transition-all duration-300 shadow-sm"
+              className="hidden lg:flex p-3 rounded-2xl bg-white border border-slate-200 text-slate-500 hover:text-indigo-600 hover:border-indigo-100 hover:bg-indigo-50 transition-all duration-300 shadow-sm"
               aria-label="Toggle Sidebar"
             >
               {sidebarOpen ? <ChevronLeft className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -194,11 +194,36 @@ const DashboardLayout = ({ children }: Props) => {
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-10 custom-scrollbar relative z-10">
-          <div className="max-w-7xl mx-auto pb-20">
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-10 custom-scrollbar relative z-10 pb-32 lg:pb-10">
+          <div className="max-w-7xl mx-auto">
             {children}
           </div>
         </main>
+
+        {/* ── MOBILE BOTTOM NAVIGATION ───────────────────── */}
+        <nav className="fixed bottom-6 left-6 right-6 h-20 bg-white/80 backdrop-blur-2xl border border-white/20 rounded-[2.5rem] shadow-2xl shadow-indigo-500/20 z-50 flex items-center justify-around px-2 lg:hidden animate-in slide-in-from-bottom-10 duration-700">
+          {navItems.map((item) => {
+            const Icon = item.icon
+            const isActive = location.pathname === item.path
+            return (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={`flex flex-col items-center justify-center gap-1.5 w-16 h-16 rounded-2xl transition-all duration-300 ${
+                  isActive 
+                    ? 'text-indigo-600 bg-indigo-50/50' 
+                    : 'text-slate-400 hover:text-slate-600'
+                }`}
+              >
+                <Icon className={`w-6 h-6 ${isActive ? 'scale-110' : ''} transition-transform duration-300`} />
+                <span className={`text-[10px] font-black uppercase tracking-widest ${isActive ? 'opacity-100' : 'opacity-0 h-0 overflow-hidden'} transition-all`}>
+                   {item.label}
+                </span>
+                {isActive && <div className="w-1.5 h-1.5 bg-indigo-600 rounded-full mt-0.5 shadow-lg shadow-indigo-500/50" />}
+              </Link>
+            )
+          })}
+        </nav>
       </div>
     </div>
   )
