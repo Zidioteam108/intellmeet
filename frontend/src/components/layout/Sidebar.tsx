@@ -1,5 +1,5 @@
-import React from 'react'
 import { Link, useLocation } from 'react-router-dom'
+import logo from '@/assets/logo.png'
 import { 
   LayoutDashboard, 
   Video, 
@@ -34,12 +34,8 @@ const Sidebar = () => {
       <div className="p-8 pb-10">
         <div className="flex items-center gap-4">
           <div className="relative">
-            <img src="/src/assets/logo.png" alt="Logo" className="h-14 w-auto object-contain drop-shadow-sm" />
+            <img src={logo} alt="Logo" className="h-14 w-auto object-contain drop-shadow-sm" />
             <div className="absolute -top-1 -right-1 h-3 w-3 bg-green-500 rounded-full border-2 border-white"></div>
-          </div>
-          <div>
-            <span className="text-2xl font-extrabold tracking-tight text-gray-900 block">IntellMeet</span>
-            <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded uppercase tracking-widest">v2.0 Pro</span>
           </div>
         </div>
       </div>
