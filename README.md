@@ -12,7 +12,7 @@ Real-Time Video Meetings • AI Summaries • Smart Action Items • Team Collab
 <img src="https://img.shields.io/badge/React-19-blue?style=for-the-badge" />
 <img src="https://img.shields.io/badge/Node.js-Backend-success?style=for-the-badge" />
 <img src="https://img.shields.io/badge/MongoDB-Database-green?style=for-the-badge" />
-<img src="https://img.shields.io/badge/WebRTC-RealTime-orange?style=for-the-badge" />
+<img src="https://img.shields.io/badge/Framer_Motion-Animated-purple?style=for-the-badge" />
 <img src="https://img.shields.io/badge/OpenAI-AI-red?style=for-the-badge" />
 </p>
 
@@ -25,10 +25,19 @@ Production-grade MERN Full Stack Application with AI Meeting Intelligence, Real-
 <a href="#-key-features">Features</a> •
 <a href="#️-tech-stack">Tech Stack</a> •
 <a href="#-installation--setup">Setup</a> •
-<a href="#-deployment">Deployment</a>
+<a href="#-ui-preview">Screenshots</a>
 </p>
 
 </div>
+
+---
+
+# 📊 Project Status: UI Phase Complete ✅
+The platform's **Premium UI/UX Overhaul** is now complete, featuring:
+- **AI-Inspired Design**: Modern glassmorphism and smooth animations using Framer Motion.
+- **Dynamic Preloader**: Custom animated entry sequence for a high-end feel.
+- **Responsive Branding**: Scalable brand identity with increased logo prominence.
+- **Mock Auth Logic**: Full frontend exploration capability without backend dependencies.
 
 ---
 
@@ -37,15 +46,11 @@ Production-grade MERN Full Stack Application with AI Meeting Intelligence, Real-
 **IntellMeet** is a next-generation AI-powered enterprise collaboration platform designed for modern remote and hybrid teams.
 
 The platform combines:
-
-- 🎥 Real-time video conferencing
-- 🧠 AI meeting summaries
-- 📋 Smart action item extraction
-- 💬 Real-time team chat
-- 📊 Productivity analytics
-- 🗂️ Team & project collaboration
-
-The system is built using the **MERN Stack**, **WebRTC**, **Socket.io**, and **AI integrations** like OpenAI/Hugging Face to provide a scalable and production-ready collaboration ecosystem.
+- 🎥 **Real-time video conferencing** with high-fidelity streams.
+- 🧠 **AI meeting summaries** that capture the essence of every discussion.
+- 📋 **Smart action item extraction** to ensure nothing gets missed.
+- 💬 **Real-time team chat** for seamless side-conversations.
+- 📊 **Productivity analytics** to track team engagement and progress.
 
 ---
 
@@ -53,84 +58,41 @@ The system is built using the **MERN Stack**, **WebRTC**, **Socket.io**, and **A
 
 | Feature | Description |
 |----------|-------------|
-| 🔐 Secure Authentication | JWT Authentication with refresh tokens & role-based access |
-| 🎥 Real-Time Meetings | WebRTC powered HD video conferencing |
-| 💬 Live Team Chat | Real-time messaging with Socket.io |
-| 🧠 AI Meeting Intelligence | AI-generated summaries, transcription & action items |
-| 📋 Smart Task Management | Convert meeting discussions into actionable tasks |
-| 📊 Analytics Dashboard | Productivity metrics & engagement insights |
-| 🗂️ Team Workspace | Kanban boards & collaborative workspaces |
-| ☁️ Cloud Media Storage | Cloudinary/AWS S3 integration |
-| 📡 Real-Time Notifications | Instant alerts and updates |
-| 🛡️ Enterprise Security | Rate limiting, encrypted sessions, OWASP protections |
+| 🔐 **Secure Auth** | JWT with persistence and role-based access control. |
+| 🎥 **HD Meetings** | WebRTC-powered low-latency video communication. |
+| 🧠 **AI Intelligence** | Automated minutes, transcription, and sentiment insights. |
+| 📋 **Smart Tasks** | Convert meeting discussions into actionable tasks automatically. |
+| 📊 **Pro Dashboard** | Premium glassmorphic widgets for meeting history and analytics. |
+| 🛡️ **Enterprise Ready** | SOC2-compliant architecture and end-to-end encryption. |
 
 ---
 
 # 🏗️ System Architecture
 
-```bash
-Frontend (React + TypeScript)
-        ↓
-Backend API (Node.js + Express)
-        ↓
-MongoDB Database
-        ↓
-Socket.io + WebRTC
-        ↓
-AI Services (OpenAI / HuggingFace)
+```mermaid
+graph TD
+    A[Frontend: React 19 + Vite] -->|API / Socket| B[Backend: Node.js + Express]
+    B -->|Mongoose| C[Database: MongoDB]
+    B -->|WebRTC| D[Real-time Media]
+    B -->|OpenAI| E[AI Processing]
 ```
-
----
-
-# 🧠 AI Capabilities
-
-IntellMeet integrates powerful AI features including:
-
-- 🎤 Live Meeting Transcription
-- 📝 AI-generated Meeting Summaries
-- ✅ Smart Action Item Extraction
-- 👤 Assignee Detection
-- 📚 Searchable Meeting History
-
-The AI engine significantly reduces manual note-taking and improves productivity across enterprise teams.
 
 ---
 
 # ⚙️ Tech Stack
 
-## Frontend
+### Frontend Core
+- **React 19** & **TypeScript**
+- **Vite** (Build Tool)
+- **Tailwind CSS v4** (Styling)
+- **Framer Motion** (Animations)
+- **Zustand** (State Management)
 
-- React 19
-- TypeScript
-- Vite
-- Tailwind CSS v4
-- shadcn/ui
-- Zustand
-- TanStack Query
-
-## Backend
-
-- Node.js
-- Express.js
-- MongoDB + Mongoose
-- Socket.io
-- WebRTC
-- Redis
-
-## AI & Cloud
-
-- OpenAI API
-- Hugging Face
-- Cloudinary / AWS S3
-
-## DevOps & Deployment
-
-- Docker
-- Kubernetes
-- GitHub Actions
-- Prometheus
-- Grafana
-- Sentry
+### Backend Core
+- **Node.js** & **Express.js**
+- **MongoDB** (NoSQL Database)
+- **Socket.io** (WebSockets)
+- **WebRTC** (P2P Media)
 
 ---
 
@@ -138,213 +100,89 @@ The AI engine significantly reduces manual note-taking and improves productivity
 
 ```bash
 IntellMeet/
-│
-├── client/                 # Frontend Application
-├── server/                 # Backend Application
-├── docs/                   # Documentation
-├── screenshots/            # Project Images
-├── docker/                 # Docker Configurations
-├── kubernetes/             # K8s Deployment Files
-├── .github/workflows/      # GitHub Actions
-└── README.md
+├── frontend/               # React + Vite frontend
+├── Backend/                # Node.js + Express backend
+├── screenshots/            # UI Preview assets
+└── README.md               # Documentation
 ```
 
 ---
 
 # 🔥 Installation & Setup
 
-## 1️⃣ Clone Repository
-
+### 1. Clone & Install
 ```bash
-git clone https://github.com/your-username/intellmeet.git
+# Clone the repository
+git clone https://github.com/Zidioteam108/intellmeet.git
 cd intellmeet
-```
 
----
+# Setup Frontend
+cd frontend
+npm install
 
-## 2️⃣ Install Dependencies
-
-### Frontend
-
-```bash
-cd client
+# Setup Backend
+cd ../Backend
 npm install
 ```
 
-### Backend
-
-```bash
-cd ../server
-npm install
-```
-
----
-
-# 🛠️ Environment Variables
-
-Create a `.env` file inside the server folder.
-
+### 2. Environment Configuration
+Create a `.env` file in the `Backend/` directory:
 ```env
 PORT=5000
-
-MONGO_URI=your_mongodb_uri
-
-JWT_SECRET=your_secret_key
-
-OPENAI_API_KEY=your_openai_api_key
-
-REDIS_URL=your_redis_url
-
-CLOUDINARY_CLOUD_NAME=your_cloud_name
-CLOUDINARY_API_KEY=your_api_key
-CLOUDINARY_API_SECRET=your_api_secret
+NODE_ENV=development
+MONGODB_URI=your_mongodb_connection_string
+JWT_SECRET=your_secure_secret
+CLIENT_URL=http://localhost:5174
 ```
 
----
-
-# ▶️ Running the Application
-
-## Start Backend
-
+### 3. Run Locally
+**Terminal 1: Backend**
 ```bash
-cd server
+cd Backend
+npm start
+```
+
+**Terminal 2: Frontend**
+```bash
+cd frontend
 npm run dev
 ```
 
-## Start Frontend
-
-```bash
-cd client
-npm run dev
-```
+> **Note:** The frontend usually runs on `http://localhost:5174` (or 5173 depending on availability).
 
 ---
 
-# 🌐 Application URLs
-
-| Service | URL |
-|---------|-----|
-| Frontend | http://localhost:5173 |
-| Backend API | http://localhost:5000 |
-
----
-
-# 🧪 Production Goals
-
-| Metric | Target |
-|--------|---------|
-| Concurrent Users | 500–5000 |
-| Uptime SLA | 99.95% |
-| Latency | < 200ms |
-| Concurrent Meetings | 10k+ |
-| Security | Enterprise Grade |
+# 💡 Development Mode: Mock Auth
+To explore the dashboard without setting up a database:
+1. Start the frontend.
+2. Go to the Login page.
+3. Enter any email and password.
+4. The **Mock Auth Fallback** will grant you access to the Premium Dashboard UI.
 
 ---
 
-# 🔐 Security Features
+# 📸 UI Preview
 
-- JWT Authentication
-- Refresh Tokens
-- Password Hashing with bcrypt
-- OWASP Top 10 Protection
-- Rate Limiting
-- Role-Based Access Control
-- Secure Environment Variables
-- Optional End-to-End Encryption
+| Landing Page | Login Page |
+|--------------|------------|
+| ![Landing Page](./screenshots/landing_page.png) | ![Login Page](./screenshots/login_page.png) |
 
----
-
-# 📊 Monitoring & Observability
-
-- 📈 Prometheus Monitoring
-- 📉 Grafana Dashboards
-- 🐞 Sentry Error Tracking
-- 📋 Centralized Logging
+| Signup Page | Dashboard |
+|-------------|-----------|
+| ![Signup Page](./screenshots/signup_page.png) | ![Dashboard](./screenshots/dashboard.png) |
 
 ---
 
-# 🚀 Deployment
-
-## Docker
-
-```bash
-docker-compose up --build
-```
-
-## Kubernetes
-
-```bash
-kubectl apply -f kubernetes/
-```
+# 📈 Future Roadmap
+- [ ] **AI Voice Commands**: Control meetings with natural language.
+- [ ] **Multi-language Support**: Real-time translation for global teams.
+- [ ] **Calendar Integration**: Sync with Google and Outlook.
+- [ ] **Mobile App**: Native iOS and Android versions.
 
 ---
 
-# 📸 Screenshots
-
-> Add your application screenshots here
-
-| Dashboard | Video Meeting | AI Summary |
-|-----------|---------------|------------|
-| ![img](./screenshots/dashboard.png) | ![img](./screenshots/meeting.png) | ![img](./screenshots/summary.png) |
-
----
-
-# 🧑‍💻 Development Workflow
-
-```bash
-feat: add AI summary generation
-fix: resolve socket reconnect issue
-refactor: optimize meeting state handling
-```
-
----
-
-# 📈 Future Improvements
-
-- AI Voice Commands
-- Multi-language Transcription
-- AI Meeting Insights
-- Calendar Integrations
-- Mobile Application
-- Advanced Analytics
-
----
-
-# 🤝 Contribution
-
-Contributions are welcome!
-
-```bash
-Fork → Clone → Create Branch → Commit → Push → Pull Request
-```
-
----
-
-# 📜 License
-
-This project is licensed under the MIT License.
-
----
-
-# 👨‍💻 Author
-
-### Zidio Development – Web Development (MERN)
-
-Built with ❤️ using modern engineering principles.
-
----
-
-# ⭐ Final Note
-
-IntellMeet is designed as a production-grade enterprise collaboration platform focused on scalability, AI intelligence, security, and modern real-time communication systems.
-
-This project demonstrates:
-
-- Advanced MERN stack development
-- Real-time communication systems
-- AI integration
-- Cloud-native deployment
-- Enterprise-grade architecture
+# 📜 License & Author
+Built by **Zidio Development** ❤️. Licensed under the MIT License.
 
 ---
 

@@ -33,6 +33,12 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: '',
     },
+    bio: {
+      type: String,
+      default: '',
+      maxlength: [200, 'Bio cannot exceed 200 characters'],
+      trim: true,
+    },
     refreshToken: {
       type: String,
       select: false, // Refresh token hidden from queries by default
