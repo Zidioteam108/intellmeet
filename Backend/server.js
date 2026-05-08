@@ -5,6 +5,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const http = require('http');
 const { Server } = require('socket.io');
+const meetingRoutes = require('./src/routes/meetingRoutes');
 const connectDB = require('./src/config/database');
 
 // Route imports
@@ -46,7 +47,7 @@ app.get('/health', (req, res) => {
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/profile', profileRoutes);
-
+app.use('/api/meetings', meetingRoutes);
 // Socket.io logic
 io.on('connection', (socket) => {
   console.log('A user connected:', socket.id);
