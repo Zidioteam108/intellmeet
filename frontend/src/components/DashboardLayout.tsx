@@ -12,7 +12,6 @@ import {
   ChevronLeft, 
   Bell, 
   Search,
-  Settings,
   Plus,
   Zap
 } from 'lucide-react'
@@ -45,21 +44,29 @@ const DashboardLayout = ({ children }: Props) => {
 
   const handleLogout = () => {
     clearAuth()
-    navigate('/login')
+    navigate('/')
   }
 
   return (
-    <div className="flex h-screen bg-[#f8fafc] overflow-hidden font-sans">
+    <div className="flex h-screen bg-[#f8fafc] overflow-x-hidden font-sans w-screen max-w-full relative touch-pan-y overscroll-none">
       
       {/* Background Gradients */}
       <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-indigo-100/30 rounded-full blur-[140px] -z-10 opacity-60"></div>
       <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-purple-100/20 rounded-full blur-[120px] -z-10 opacity-50"></div>
 
-      {/* ── SIDEBAR ─────────────────────────────────────── */}
+      {/* Sidebar Overlay (Mobile) */}
+      {sidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-40 lg:hidden transition-opacity duration-500"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      {/* ── SIDEBAR (Desktop Only) ────────────────────── */}
       <aside
-        className={`${
-          sidebarOpen ? 'w-72' : 'w-24'
-        } bg-white/80 backdrop-blur-xl border-r border-slate-200 flex flex-col transition-all duration-500 ease-in-out z-30 shadow-2xl shadow-indigo-500/5`}
+        className={`hidden lg:flex fixed inset-y-0 left-0 lg:relative ${
+          sidebarOpen ? 'w-72 translate-x-0' : 'w-72 lg:w-24 -translate-x-full lg:translate-x-0'
+        } bg-white/95 lg:bg-white/80 backdrop-blur-xl border-r border-slate-200 flex flex-col transition-all duration-500 ease-in-out z-50 lg:z-30 shadow-2xl shadow-indigo-500/5`}
       >
         {/* Logo Area */}
         <div className="h-24 flex items-center px-8 mb-4">
@@ -126,14 +133,19 @@ const DashboardLayout = ({ children }: Props) => {
       </aside>
 
       {/* ── MAIN CONTENT ────────────────────────────────── */}
-      <div className="flex-1 flex flex-col overflow-hidden relative">
+      <div className="flex-1 flex flex-col overflow-hidden relative w-full min-w-0">
         
         {/* Top Navbar */}
-        <header className={`h-24 flex items-center justify-between px-10 z-20 transition-all duration-500 ${scrolled ? 'bg-white/80 backdrop-blur-xl border-b border-slate-200 shadow-sm' : 'bg-transparent'}`}>
-          <div className="flex items-center gap-8">
+        <header className={`h-20 lg:h-24 flex items-center justify-between px-4 lg:px-10 z-20 transition-all duration-500 ${scrolled ? 'bg-white/80 backdrop-blur-xl border-b border-slate-200 shadow-sm' : 'bg-transparent'}`}>
+          <div className="flex items-center gap-4 lg:gap-8">
+            {/* Mobile Logo */}
+            <Link to="/" className="lg:hidden flex items-center">
+              <img src={logo} alt="IntellMeet" className="h-10 w-auto object-contain hover:scale-105 transition-standard" />
+            </Link>
+
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="p-3 rounded-2xl bg-white border border-slate-200 text-slate-500 hover:text-indigo-600 hover:border-indigo-100 hover:bg-indigo-50 transition-all duration-300 shadow-sm"
+              className="hidden lg:flex p-3 rounded-2xl bg-white border border-slate-200 text-slate-500 hover:text-indigo-600 hover:border-indigo-100 hover:bg-indigo-50 transition-all duration-300 shadow-sm"
               aria-label="Toggle Sidebar"
             >
               {sidebarOpen ? <ChevronLeft className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -187,11 +199,41 @@ const DashboardLayout = ({ children }: Props) => {
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 overflow-y-auto p-10 custom-scrollbar relative z-10">
-          <div className="max-w-7xl mx-auto">
+        <main className="flex-1 overflow-y-auto px-4 py-8 sm:p-6 lg:p-10 custom-scrollbar relative z-10 pb-40 lg:pb-10">
+          <div className="w-full max-w-7xl mx-auto">
             {children}
           </div>
         </main>
+
+      </div>
+
+      {/* ── MOBILE BOTTOM NAVIGATION (Fixed to edge) ── */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-[100] bg-white border-t border-slate-200 h-20 px-4 pb-safe animate-in slide-in-from-bottom-20 duration-500 shadow-[0_-10px_30px_rgba(0,0,0,0.05)]">
+        <nav className="h-full flex items-center justify-around">
+          {navItems.map((item) => {
+            const Icon = item.icon
+            const isActive = location.pathname === item.path
+            return (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={`relative flex flex-col items-center justify-center w-full h-full transition-all duration-500 ${
+                  isActive 
+                    ? 'text-indigo-600' 
+                    : 'text-slate-400'
+                }`}
+              >
+                <Icon className={`w-6 h-6 ${isActive ? 'stroke-[2.5px]' : 'stroke-2'} transition-all`} />
+                <span className={`text-[10px] font-black uppercase tracking-tighter mt-1`}>
+                   {item.label}
+                </span>
+                {isActive && (
+                  <div className="absolute top-0 w-1/2 h-1 bg-indigo-600 rounded-b-full shadow-[0_0_10px_rgba(79,70,229,0.5)]" />
+                )}
+              </Link>
+            )
+          })}
+        </nav>
       </div>
     </div>
   )

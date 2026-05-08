@@ -84,4 +84,5 @@ const startServer = async () => {
   }
 };
 
+module.exports = app;
 startServer();

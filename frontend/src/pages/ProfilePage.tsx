@@ -3,8 +3,7 @@ import { useAuthStore } from '@/store/authStore'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Camera, Mail, User as UserIcon, Shield, Sparkles, CheckCircle2, ChevronRight, AlertCircle } from 'lucide-react'
+import { Camera, Mail, User as UserIcon, Shield, Sparkles, CheckCircle2, ChevronRight, AlertCircle, LogOut } from 'lucide-react'
 
 const ProfilePage = () => {
   const { user, updateUser } = useAuthStore()
@@ -37,9 +36,10 @@ const ProfilePage = () => {
       return
     }
 
-    setIsLoading(true)
+    setIsSaving(true)
     // Simulated API call - Logic will be on Day 9
     setTimeout(() => {
+      console.log('Avatar file ready for upload:', avatarFile)
       updateUser({ name: name.trim(), bio: bio.trim() })
       setSuccessMsg('Profile settings updated successfully.')
       setIsSaving(false)
@@ -47,7 +47,7 @@ const ProfilePage = () => {
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
+    <div className="w-full lg:max-w-4xl mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
       
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
@@ -59,6 +59,18 @@ const ProfilePage = () => {
           <h1 className="text-4xl font-extrabold text-slate-900 tracking-tight">My Profile</h1>
           <p className="text-slate-500 font-medium mt-2 text-lg">Manage your personal presence and account settings.</p>
         </div>
+
+        <Button 
+          onClick={() => {
+            const { clearAuth } = useAuthStore.getState()
+            clearAuth()
+            window.location.href = '/'
+          }}
+          className="bg-red-50 hover:bg-red-100 text-red-600 border border-red-100 px-8 py-7 rounded-2xl font-black text-sm flex items-center gap-3 transition-standard active:scale-95 shadow-sm"
+        >
+          <LogOut className="w-5 h-5" />
+          LOGOUT SESSION
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
@@ -141,7 +153,7 @@ const ProfilePage = () => {
                       type="text"
                       className="pl-12 py-7 bg-slate-50/50 border-slate-200 rounded-2xl focus:ring-indigo-500 transition-standard font-medium"
                       value={name}
-                      onChange={(e) => setName(e.target.value)}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setName(e.target.value)}
                     />
                   </div>
                 </div>
@@ -168,7 +180,7 @@ const ProfilePage = () => {
                   className="w-full p-5 bg-slate-50/50 border border-slate-200 rounded-[2rem] focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-standard font-medium min-h-[140px] resize-none placeholder:text-slate-400"
                   placeholder="Tell your team about yourself..."
                   value={bio}
-                  onChange={(e) => setBio(e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setBio(e.target.value)}
                   maxLength={200}
                 />
                 <div className="flex justify-end pr-4">

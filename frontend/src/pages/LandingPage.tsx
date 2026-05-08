@@ -7,26 +7,33 @@ const LandingPage = () => {
     <div className="min-h-screen bg-white overflow-hidden font-sans">
       
       {/* ── NAVIGATION ─────────────────────────────────── */}
-      <nav className="fixed top-0 w-full z-50 bg-white/70 backdrop-blur-xl border-b border-slate-100 px-6 sm:px-12 py-4 flex items-center justify-between">
+      <nav className="fixed top-0 w-full z-50 bg-white/70 backdrop-blur-xl border-b border-slate-100 px-4 sm:px-12 py-4 flex items-center justify-between">
         <div className="flex items-center">
           <Link to="/" className="hover:scale-105 transition-standard">
             <img src={logo} alt="IntellMeet" className="h-10 sm:h-12 w-auto object-contain" />
           </Link>
         </div>
         
-        <div className="hidden md:flex items-center gap-8">
+        <div className="hidden lg:flex items-center gap-8">
           <a href="#features" className="text-sm font-bold text-slate-600 hover:text-indigo-600 transition-colors">Features</a>
           <a href="#how-it-works" className="text-sm font-bold text-slate-600 hover:text-indigo-600 transition-colors">How it Works</a>
           <a href="#pricing" className="text-sm font-bold text-slate-600 hover:text-indigo-600 transition-colors">Pricing</a>
         </div>
 
-        <div className="flex items-center gap-4">
-          <Link to="/login" className="text-sm font-bold text-slate-700 hover:text-indigo-600 px-4 py-2 transition-standard">
+        <div className="flex items-center gap-2 sm:gap-4">
+          <Link to="/login" className="text-sm font-bold text-slate-700 hover:text-indigo-600 px-3 sm:px-4 py-2 transition-standard">
             Sign In
           </Link>
-          <Link to="/signup" className="hidden sm:flex items-center gap-2 px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-black shadow-lg shadow-indigo-100 transition-standard">
+          <Link to="/signup" className="hidden xs:flex items-center gap-2 px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-black shadow-lg shadow-indigo-100 transition-standard">
             Get Started Free
           </Link>
+          
+          {/* Mobile Menu Toggle (Simplified for now) */}
+          <button className="lg:hidden p-2 text-slate-600">
+             <div className="w-6 h-0.5 bg-slate-900 mb-1.5 rounded-full"></div>
+             <div className="w-6 h-0.5 bg-slate-900 mb-1.5 rounded-full"></div>
+             <div className="w-6 h-0.5 bg-slate-900 rounded-full"></div>
+          </button>
         </div>
       </nav>
 
