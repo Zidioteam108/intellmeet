@@ -6,13 +6,11 @@ import LoginPage from './pages/LoginPage'
 import SignupPage from './pages/SignupPage'
 import DashboardPage from './pages/DashboardPage'
 import ProfilePage from './pages/ProfilePage'
+import MeetingsPage from './pages/MeetingsPage'
 import ProtectedRoute from './components/ProtectedRoute'
 import DashboardLayout from './components/DashboardLayout'
 
 // Placeholder pages for routes that will be built on upcoming days
-const MeetingsPage = () => (
-  <div className="p-8"><h1 className="text-3xl font-black text-slate-900 mb-4">Meetings</h1><p className="text-slate-500 font-medium">This module is coming soon in the next phase of development.</p></div>
-)
 const TasksPage = () => (
   <div className="p-8"><h1 className="text-3xl font-black text-slate-900 mb-4">Tasks</h1><p className="text-slate-500 font-medium">This module is coming soon in the next phase of development.</p></div>
 )
