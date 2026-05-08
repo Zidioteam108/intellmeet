@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WebRTC Demo</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; background: #f5f7fb; }
+    h1 { margin-bottom: 20px; }
+    .videos { display: flex; gap: 20px; margin-bottom: 20px; flex-wrap: wrap; }
+    video { width: 320px; height: 240px; background: #000; border-radius: 10px; }
+    textarea { width: 100%; min-height: 100px; margin: 10px 0; padding: 10px; }
+    button { margin-right: 10px; margin-bottom: 10px; padding: 10px 16px; border: none; border-radius: 8px; background: #2563eb; color: white; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <h1>Day 4 WebRTC Peer Test</h1>
+
+  <div class="videos">
+    <div>
+      <p><strong>Local Video</strong></p>
+      <video id="localVideo" autoplay playsinline muted></video>
+    </div>
+    <div>
+      <p><strong>Remote Video</strong></p>
+      <video id="remoteVideo" autoplay playsinline></video>
+    </div>
+  </div>
+
+  <button id="startBtn">Start Camera</button>
+  <button id="createOfferBtn">Create Offer</button>
+  <button id="createAnswerBtn">Create Answer</button>
+  <button id="addAnswerBtn">Add Answer</button>
+
+  <h3>Offer</h3>
+  <textarea id="offerInput" placeholder="Offer SDP appears here..."></textarea>
+
+  <h3>Answer</h3>
+  <textarea id="answerInput" placeholder="Paste answer SDP here..."></textarea>
+
+  <script>
+    const localVideo = document.getElementById('localVideo');
+    const remoteVideo = document.getElementById('remoteVideo');
+    const startBtn = document.getElementById('startBtn');
+    const createOfferBtn = document.getElementById('createOfferBtn');
+    const createAnswerBtn = document.getElementById('createAnswerBtn');
+    const addAnswerBtn = document.getElementById('addAnswerBtn');
+    const offerInput = document.getElementById('offerInput');
+    const answerInput = document.getElementById('answerInput');
+
+    let localStream;
+    let peerConnection;
+
+    const servers = {
+      iceServers: [
+        { urls: 'stun:stun.l.google.com:19302' }
+      ]
+    };
+
+    async function createPeerConnection() {
+      peerConnection = new RTCPeerConnection(servers);
+
+      peerConnection.ontrack = (event) => {
+        remoteVideo.srcObject = event.streams[0];
+      };
+
+      peerConnection.onicecandidate = (event) => {
+        if (event.candidate) {
+          console.log('New ICE candidate:', event.candidate);
+        }
+      };
+
+      localStream.getTracks().forEach(track => {
+        peerConnection.addTrack(track, localStream);
+      });
+    }
+
+    startBtn.onclick = async () => {
+      localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      localVideo.srcObject = localStream;
+      await createPeerConnection();
+      alert('Camera started');
+    };
+
+    createOfferBtn.onclick = async () => {
+      const offer = await peerConnection.createOffer();
+      await peerConnection.setLocalDescription(offer);
+      offerInput.value = JSON.stringify(offer);
+    };
+
+    createAnswerBtn.onclick = async () => {
+      const offer = JSON.parse(offerInput.value);
+      await peerConnection.setRemoteDescription(offer);
+      const answer = await peerConnection.createAnswer();
+      await peerConnection.setLocalDescription(answer);
+      answerInput.value = JSON.stringify(answer);
+    };
+
+    addAnswerBtn.onclick = async () => {
+      const answer = JSON.parse(answerInput.value);
+      if (!peerConnection.currentRemoteDescription) {
+        await peerConnection.setRemoteDescription(answer);
+      }
+    };
+  </script>
+</body>
+</html>
