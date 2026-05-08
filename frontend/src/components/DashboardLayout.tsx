@@ -167,7 +167,10 @@ const DashboardLayout = ({ children }: Props) => {
               <span className="absolute top-3 right-3 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"></span>
             </button>
             
-            <button className="hidden sm:flex items-center gap-3 px-6 py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl text-sm font-black shadow-xl shadow-indigo-100 transition-all duration-300 group">
+            <button 
+              onClick={() => navigate('/meetings')}
+              className="hidden sm:flex items-center gap-3 px-6 py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl text-sm font-black shadow-xl shadow-indigo-100 transition-all duration-300 group"
+            >
               <Plus className="w-5 h-5 group-hover:rotate-90 transition-transform duration-500" />
               NEW MEETING
             </button>

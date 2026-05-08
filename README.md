@@ -190,6 +190,7 @@ To explore the dashboard without setting up a database:
 ---
 
 # 📈 Future Roadmap
+- [x] **Day 4** — Meeting model, CRUD APIs, meeting lobby UI, raw WebRTC demo
 - [ ] **AI Voice Commands**: Control meetings with natural language.
 - [ ] **Multi-language Support**: Real-time translation for global teams.
 - [ ] **Calendar Integration**: Sync with Google and Outlook.
