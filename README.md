@@ -69,6 +69,9 @@ npm run dev
 - **Frontend**: Premium UI shell, animated dashboard, and meeting lobby complete.
 - **Verification**: WebRTC signaling verified in multi-tab browser tests.
 
+## 📊 Week 2 Progress
+- [x] Day 8 — Auth connected to frontend, refresh token API, Socket.io auth
+
 ---
 
 ## 📈 Future Roadmap

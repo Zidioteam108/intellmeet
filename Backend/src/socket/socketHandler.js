@@ -1,9 +1,37 @@
+const jwt = require('jsonwebtoken');
+const User = require('../models/User');
 const ChatMessage = require('../models/ChatMessage');
 const rooms = new Map(); // roomId -> Set of socketIds
 
 const socketHandler = (io) => {
+  // ── Authentication Middleware ───────────────────────────────────────
+  io.use(async (socket, next) => {
+    try {
+      const token = socket.handshake.auth?.token;
+
+      if (!token) {
+        return next(new Error('Authentication required'));
+      }
+
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      const user = await User.findById(decoded.id);
+
+      if (!user) {
+        return next(new Error('User not found'));
+      }
+
+      // Attach user to socket for use later
+      socket.user = user;
+      next();
+
+    } catch (err) {
+      console.error('Socket Auth Error:', err.message);
+      next(new Error('Invalid token'));
+    }
+  });
+
   io.on('connection', (socket) => {
-    console.log(`✅ Socket connected: ${socket.id}`);
+    console.log(`✅ Socket connected: ${socket.id} — User: ${socket.user?.name}`);
 
     // ── Join Room ──────────────────────────────────────────────────────
     socket.on('join-room', ({ roomId, userId, userName }) => {
