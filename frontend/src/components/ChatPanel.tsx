@@ -1,74 +1,93 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { getSocket } from '@/utils/socket'
 
 interface Message {
   id: string
   senderName: string
-  text: string
+  message: string
   time: string
   isMine: boolean
+  senderId?: string
 }
 
-const sampleMessages: Message[] = [
-  { id: '1', senderName: 'Ravi', text: 'Hello everyone!', time: '10:01 AM', isMine: false },
-  { id: '2', senderName: 'You', text: 'Hi Ravi, ready to start?', time: '10:02 AM', isMine: true },
-  { id: '3', senderName: 'Priya', text: 'Yes, let\'s begin!', time: '10:03 AM', isMine: false },
-]
+interface Props {
+  roomId: string
+  currentUserId: string
+  currentUserName: string
+}
 
-const ChatPanel = () => {
-  const [messages, setMessages] = useState<Message[]>(sampleMessages)
+const ChatPanel = ({ roomId, currentUserId, currentUserName }: Props) => {
+  const [messages, setMessages] = useState<Message[]>([])
   const [inputText, setInputText] = useState('')
+  const bottomRef = useRef<HTMLDivElement>(null)
+  const socket = getSocket()
+
+  useEffect(() => {
+    if (!socket) return
+
+    socket.on('chat-message', (data) => {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: data.id,
+          senderName: data.senderName,
+          message: data.message,
+          time: new Date(data.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          isMine: data.senderId === currentUserId,
+        },
+      ])
+    })
+
+    return () => {
+      socket.off('chat-message')
+    }
+  }, [socket, currentUserId])
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [messages])
 
   const sendMessage = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!inputText.trim()) return
+    if (!inputText.trim() || !socket) return
 
-    const newMsg: Message = {
-      id: Date.now().toString(),
-      senderName: 'You',
-      text: inputText.trim(),
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      isMine: true,
-    }
-
-    setMessages((prev) => [...prev, newMsg])
+    socket.emit('chat-message', {
+      roomId,
+      message: inputText.trim(),
+      senderId: currentUserId,
+      senderName: currentUserName,
+    })
     setInputText('')
-    // Socket emit will be added on Day 6
   }
 
   return (
     <div className="flex flex-col h-full bg-white border-l border-gray-200">
-
-      {/* Chat Header */}
       <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
         <h3 className="text-sm font-semibold text-gray-800">Meeting Chat</h3>
-        <p className="text-xs text-gray-400">3 participants</p>
       </div>
 
-      {/* Messages Area */}
       <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3">
+        {messages.length === 0 && (
+          <p className="text-xs text-gray-400 text-center mt-4">No messages yet. Say hello! 👋</p>
+        )}
         {messages.map((msg) => (
-          <div
-            key={msg.id}
-            className={`flex flex-col ${msg.isMine ? 'items-end' : 'items-start'}`}
-          >
+          <div key={msg.id} className={`flex flex-col ${msg.isMine ? 'items-end' : 'items-start'}`}>
             {!msg.isMine && (
               <span className="text-xs text-gray-400 mb-1">{msg.senderName}</span>
             )}
-            <div
-              className={`max-w-[80%] px-3 py-2 rounded-xl text-sm ${
-                msg.isMine
-                  ? 'bg-blue-600 text-white rounded-br-sm'
-                  : 'bg-gray-100 text-gray-800 rounded-bl-sm'
-              }`}
-            >
-              {msg.text}
+            <div className={`max-w-[80%] px-3 py-2 rounded-xl text-sm ${
+              msg.isMine
+                ? 'bg-blue-600 text-white rounded-br-sm'
+                : 'bg-gray-100 text-gray-800 rounded-bl-sm'
+            }`}>
+              {msg.message}
             </div>
             <span className="text-xs text-gray-400 mt-1">{msg.time}</span>
           </div>
         ))}
+        <div ref={bottomRef} />
       </div>
 
-      {/* Input Area */}
       <form onSubmit={sendMessage} className="border-t border-gray-200 p-3 flex gap-2">
         <input
           type="text"
@@ -77,10 +96,7 @@ const ChatPanel = () => {
           placeholder="Type a message..."
           className="flex-1 text-sm px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
-        <button
-          type="submit"
-          className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors"
-        >
+        <button type="submit" className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors">
           Send
         </button>
       </form>

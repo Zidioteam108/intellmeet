@@ -43,7 +43,11 @@ const VideoRoomPage = () => {
 
       {/* Chat Panel */}
       <div className="w-80 flex-shrink-0">
-        <ChatPanel />
+        <ChatPanel
+          roomId="test-room-001"
+          currentUserId="user-test-id"
+          currentUserName="You"
+        />
       </div>
     </div>
   )
