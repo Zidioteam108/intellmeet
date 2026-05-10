@@ -20,16 +20,16 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
-          cache-dependency-path: backend/package-lock.json
+          cache-dependency-path: Backend/package-lock.json
 
       - name: Install backend dependencies
         run: |
-          cd backend
+          cd Backend
           npm ci
 
       - name: Run ESLint on backend
         run: |
-          cd backend
+          cd Backend
           npm run lint
 
   lint-frontend:
