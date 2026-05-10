@@ -21,7 +21,7 @@ const server = http.createServer(app);
 // Socket.io setup
 const io = new Server(server, {
   cors: {
-    origin: process.env.CLIENT_URL || 'http://localhost:5173',
+    origin: '*', // Allow all origins for testing
     methods: ['GET', 'POST'],
     credentials: true,
   },
@@ -31,7 +31,7 @@ const io = new Server(server, {
 app.use(helmet());
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || 'http://localhost:5173',
+    origin: '*', // Allow all origins for testing
     credentials: true,
   })
 );
