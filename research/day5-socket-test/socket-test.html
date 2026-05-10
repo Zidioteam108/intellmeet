@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Socket.io Test</title>
+  <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
+</head>
+<body>
+  <h1>Socket.io Signaling Test</h1>
+  <button onclick="joinRoom()">Join Room</button>
+  <div id="log" style="background: #f4f4f4; padding: 10px; margin-top: 10px; border-radius: 5px; font-family: monospace;"></div>
+  <script>
+    const socket = io('http://localhost:5000');
+    const log = (msg) => {
+      console.log(msg);
+      document.getElementById('log').innerHTML += `<p style="margin: 2px 0;">${new Date().toLocaleTimeString()}: ${msg}</p>`;
+    };
+    
+    socket.on('connect', () => log('✅ Connected to server: ' + socket.id));
+    socket.on('connect_error', (err) => log('❌ Connection error: ' + err.message));
+    
+    socket.on('user-joined', (data) => log('👤 User joined: ' + JSON.stringify(data)));
+    socket.on('room-info', (data) => log('ℹ️ Room info: ' + JSON.stringify(data)));
+    socket.on('user-left', (data) => log('👋 User left: ' + JSON.stringify(data)));
+
+    function joinRoom() {
+      const roomId = 'test-room-001';
+      log(`Attempting to join room: ${roomId}...`);
+      socket.emit('join-room', { 
+        roomId: roomId, 
+        userId: 'user_' + Math.floor(Math.random() * 1000), 
+        userName: 'Tester_' + socket.id.substr(0, 4) 
+      });
+    }
+  </script>
+</body>
+</html>
