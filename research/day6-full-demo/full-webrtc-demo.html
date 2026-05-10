@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>IntellMeet WebRTC Full Demo</title>
+  <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; background: #1a1a2e; color: white; }
+    .videos { display: flex; gap: 20px; margin: 20px 0; }
+    video { width: 320px; height: 240px; background: #0f3460; border-radius: 12px; }
+    button { padding: 10px 20px; margin: 5px; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; }
+    .btn-primary { background: #e94560; color: white; }
+    #status { margin: 10px 0; padding: 10px; background: #16213e; border-radius: 8px; }
+  </style>
+</head>
+<body>
+  <h2>IntellMeet Full WebRTC Demo</h2>
+  <div id="status">Status: Not connected</div>
+
+  <input id="roomInput" placeholder="Room ID" value="test-room-001" style="padding:8px;margin:5px;background:#16213e;color:white;border:1px solid #0f3460;" />
+  <input id="nameInput" placeholder="Your name" value="User A" style="padding:8px;margin:5px;background:#16213e;color:white;border:1px solid #0f3460;" />
+  <br>
+  <button class="btn-primary" onclick="startAndJoin()">Start Camera + Join Room</button>
+
+  <div class="videos">
+    <div><p>Local</p><video id="localVideo" autoplay playsinline muted></video></div>
+    <div><p>Remote</p><video id="remoteVideo" autoplay playsinline></video></div>
+  </div>
+
+  <script>
+    const socket = io('http://localhost:5000');
+    let localStream, pc;
+    const servers = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
+
+    const setStatus = (msg) => document.getElementById('status').innerText = 'Status: ' + msg;
+
+    socket.on('connect', () => setStatus('Socket connected: ' + socket.id));
+
+    socket.on('user-joined', async ({ socketId, userName }) => {
+      setStatus(userName + ' joined! Creating offer...');
+      await createOffer(socketId);
+    });
+
+    socket.on('offer', async ({ from, offer }) => {
+      setStatus('Received offer from ' + from);
+      await createAnswer(from, offer);
+    });
+
+    socket.on('answer', async ({ answer }) => {
+      await pc.setRemoteDescription(new RTCSessionDescription(answer));
+      setStatus('Answer set — video connecting...');
+    });
+
+    socket.on('ice-candidate', async ({ candidate }) => {
+      if (candidate) await pc.addIceCandidate(new RTCIceCandidate(candidate));
+    });
+
+    socket.on('user-left', () => setStatus('Other user left'));
+
+    async function startAndJoin() {
+      const roomId = document.getElementById('roomInput').value;
+      const userName = document.getElementById('nameInput').value;
+
+      try {
+        localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        document.getElementById('localVideo').srcObject = localStream;
+        setupPeerConnection();
+
+        socket.emit('join-room', { roomId, userId: socket.id, userName });
+        setStatus('Joined room: ' + roomId);
+      } catch (err) {
+        setStatus('Media error: ' + err.message);
+      }
+    }
+
+    function setupPeerConnection() {
+      pc = new RTCPeerConnection(servers);
+      localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
+      pc.ontrack = (e) => { document.getElementById('remoteVideo').srcObject = e.streams[0]; };
+      pc.onicecandidate = (e) => {
+        if (e.candidate) {
+          socket.emit('ice-candidate', { to: window._remotePeerId, candidate: e.candidate });
+        }
+      };
+    }
+
+    async function createOffer(remotePeerId) {
+      window._remotePeerId = remotePeerId;
+      const offer = await pc.createOffer();
+      await pc.setLocalDescription(offer);
+      socket.emit('offer', { to: remotePeerId, offer });
+    }
+
+    async function createAnswer(from, offer) {
+      window._remotePeerId = from;
+      await pc.setRemoteDescription(new RTCSessionDescription(offer));
+      const answer = await pc.createAnswer();
+      await pc.setLocalDescription(answer);
+      socket.emit('answer', { to: from, answer });
+    }
+  </script>
+</body>
+</html>
