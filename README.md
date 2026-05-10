@@ -204,7 +204,30 @@ To explore the dashboard without setting up a database:
 
 ---
 
-# 📈 Future Roadmap
+## 🛠️ Technical Highlights
+
+### Backend
+- **Auth**: JWT with access + refresh token rotation and secure HTTP-only cookies.
+- **Data**: MongoDB with Mongoose schemas for Users, Meetings, and Chat history.
+- **Assets**: Cloudinary integration for scalable profile avatar uploads.
+- **Cache**: Redis integration for meeting list performance (5 min TTL).
+- **Real-Time**: Socket.io with room-based isolation for signaling and live chat.
+- **Security**: Express rate limiting, CORS protection, and Helmet security headers.
+
+### Frontend
+- **Framework**: React 19 + TypeScript + Vite for a blazing fast developer experience.
+- **State**: Zustand for lightweight global state (Auth) and TanStack Query for server state.
+- **UI**: shadcn/ui + Tailwind CSS v4 for a premium, custom-designed interface.
+- **Real-Time**: Socket.io client integration for seamless live updates.
+
+### Real-Time Infrastructure
+- **WebRTC**: Peer-to-peer connection establishment for low-latency video calls.
+- **Signaling**: Custom Socket.io events for SDP (Offer/Answer) and ICE candidate exchange.
+- **STUN**: Public STUN servers for reliable peer discovery across different networks.
+
+---
+
+## 📈 Future Roadmap
 - [x] **Day 4** — Meeting model, CRUD APIs, meeting lobby UI, raw WebRTC demo
 - [ ] **AI Voice Commands**: Control meetings with natural language.
 - [ ] **Multi-language Support**: Real-time translation for global teams.
