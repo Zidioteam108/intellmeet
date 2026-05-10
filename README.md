@@ -151,6 +151,21 @@ npm run dev
 
 > **Note:** The frontend usually runs on `http://localhost:5174` (or 5173 depending on availability).
 
+---
+
+# 🐳 Docker Setup
+
+### Run locally with Docker
+
+```bash
+docker-compose up --build
+```
+
+- **Backend** runs at: `http://localhost:5000`
+- **Frontend** runs at: `http://localhost:3000`
+
+---
+
 ## 🚀 Deployment (Vercel)
 
 ### 1. Frontend
