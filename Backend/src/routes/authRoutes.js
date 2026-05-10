@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const rateLimit = require('express-rate-limit');
-const { signup, login, refreshToken, logout } = require('../controllers/authController');
+const { signup, login, refreshAccessToken, logout } = require('../controllers/authController');
 const { protect } = require('../middleware/authMiddleware');
 
 // Rate limiter — allows only 10 attempts per 15 minutes on auth routes
@@ -20,7 +20,7 @@ const authLimiter = rateLimit({
 // Public routes (no login required)
 router.post('/signup', authLimiter, signup);
 router.post('/login', authLimiter, login);
-router.post('/refresh', refreshToken);
+router.post('/refresh', refreshAccessToken);
 router.post('/logout', logout);
 
 // Protected test route (requires login) — useful for testing middleware

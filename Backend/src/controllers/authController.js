@@ -104,12 +104,19 @@ const login = async (req, res) => {
   user.refreshToken = refreshToken;
   await user.save({ validateBeforeSave: false });
 
-  // 6. Send response
+  // 6. Set refresh token in an HTTP-only cookie
+  res.cookie('refreshToken', refreshToken, {
+    httpOnly: true,       // cannot be accessed by JavaScript
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict',
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in milliseconds
+  });
+
+  // 7. Send response
   res.status(200).json({
     success: true,
-    message: 'Logged in successfully',
+    message: 'Login successful',
     accessToken,
-    refreshToken,
     user: {
       id: user._id,
       name: user.name,
@@ -121,49 +128,69 @@ const login = async (req, res) => {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// @desc    Refresh access token using refresh token
-// @route   POST /api/auth/refresh
-// @access  Public (but needs valid refresh token)
-// ─────────────────────────────────────────────────────────────────────────────
-const refreshToken = async (req, res) => {
-  const { refreshToken: token } = req.body;
+const refreshAccessToken = async (req, res) => {
+  // Get refresh token from cookie
+  const token = req.cookies?.refreshToken;
 
   if (!token) {
-    return res.status(401).json({ success: false, message: 'Refresh token required' });
+    return res.status(401).json({
+      success: false,
+      message: 'Refresh token not found. Please login again.',
+    });
   }
 
-  // Verify the refresh token
-  const decoded = jwt.verify(token, process.env.JWT_REFRESH_SECRET);
+  try {
+    // Verify the refresh token
+    const decoded = jwt.verify(token, process.env.JWT_REFRESH_SECRET);
 
-  // Find user and check that the token matches
-  const user = await User.findById(decoded.id).select('+refreshToken');
-  if (!user || user.refreshToken !== token) {
-    return res.status(401).json({ success: false, message: 'Invalid refresh token' });
+    // Find user in database WITH refreshToken field
+    const user = await User.findById(decoded.id).select('+refreshToken');
+
+    if (!user || user.refreshToken !== token) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid refresh token. Please login again.',
+      });
+    }
+
+    // Create a new access token
+    const newAccessToken = jwt.sign(
+      { id: user._id },
+      process.env.JWT_SECRET,
+      { expiresIn: process.env.JWT_EXPIRES_IN }
+    );
+
+    res.status(200).json({
+      success: true,
+      accessToken: newAccessToken,
+    });
+
+  } catch (error) {
+    return res.status(401).json({
+      success: false,
+      message: 'Refresh token expired. Please login again.',
+    });
   }
-
-  // Issue a new access token
-  const newAccessToken = generateAccessToken(user._id);
-
-  res.status(200).json({
-    success: true,
-    accessToken: newAccessToken,
-  });
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
-// @desc    Logout — clears refresh token from database
-// @route   POST /api/auth/logout
-// @access  Private
-// ─────────────────────────────────────────────────────────────────────────────
 const logout = async (req, res) => {
-  const { refreshToken: token } = req.body;
+  const token = req.cookies?.refreshToken;
 
   if (token) {
     // Remove refresh token from database
-    await User.findOneAndUpdate({ refreshToken: token }, { refreshToken: '' });
+    await User.findOneAndUpdate(
+      { refreshToken: token },
+      { refreshToken: null }
+    );
   }
 
-  res.status(200).json({ success: true, message: 'Logged out successfully' });
+  // Clear the cookie
+  res.clearCookie('refreshToken');
+
+  res.status(200).json({
+    success: true,
+    message: 'Logged out successfully',
+  });
 };
 
-module.exports = { signup, login, refreshToken, logout };
+module.exports = { signup, login, refreshAccessToken, logout };
