@@ -7,6 +7,7 @@ const http = require('http');
 const { Server } = require('socket.io');
 const meetingRoutes = require('./src/routes/meetingRoutes');
 const connectDB = require('./src/config/database');
+const { connectRedis } = require('./src/config/redis');
 
 // Route imports
 const authRoutes = require('./src/routes/authRoutes');
@@ -75,6 +76,7 @@ const PORT = process.env.PORT || 5000;
 const startServer = async () => {
   try {
     await connectDB();
+    connectRedis();
     server.listen(PORT, () => {
       console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
     });
