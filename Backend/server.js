@@ -4,6 +4,7 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const http = require('http');
+const cookieParser = require('cookie-parser');
 const { Server } = require('socket.io');
 const meetingRoutes = require('./src/routes/meetingRoutes');
 const connectDB = require('./src/config/database');
@@ -37,6 +38,7 @@ app.use(
 );
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(cookieParser());
 
 // Routes
 app.get('/', (req, res) => {
