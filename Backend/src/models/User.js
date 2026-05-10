@@ -41,7 +41,8 @@ const userSchema = new mongoose.Schema(
     },
     refreshToken: {
       type: String,
-      select: false, // Refresh token hidden from queries by default
+      default: null,
+      select: false, // never send this to frontend by default
     },
     isActive: {
       type: Boolean,
