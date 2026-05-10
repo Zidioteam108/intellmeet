@@ -9,6 +9,7 @@ import ProfilePage from './pages/ProfilePage'
 import MeetingsPage from './pages/MeetingsPage'
 import ProtectedRoute from './components/ProtectedRoute'
 import DashboardLayout from './components/DashboardLayout'
+import VideoRoomPage from './pages/VideoRoomPage'
 
 // Placeholder pages for routes that will be built on upcoming days
 const TasksPage = () => (
@@ -75,6 +76,10 @@ function App() {
           <Route path="/analytics" element={
             <ProtectedRoute>
               <DashboardLayout><AnalyticsPage /></DashboardLayout>
+            </ProtectedRoute>
+          <Route path="/room/:roomId" element={
+            <ProtectedRoute>
+              <VideoRoomPage />
             </ProtectedRoute>
           } />
 
