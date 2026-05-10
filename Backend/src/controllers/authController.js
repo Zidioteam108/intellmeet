@@ -106,10 +106,10 @@ const login = async (req, res) => {
 
   // 6. Set refresh token in an HTTP-only cookie
   res.cookie('refreshToken', refreshToken, {
-    httpOnly: true,       // cannot be accessed by JavaScript
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
-    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in milliseconds
+    httpOnly: true,
+    secure: true, // Required for SameSite=None
+    sameSite: 'none', // Allow cross-site cookies for Vercel
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
   });
 
   // 7. Send response
