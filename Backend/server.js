@@ -7,6 +7,7 @@ const http = require('http');
 const { Server } = require('socket.io');
 const meetingRoutes = require('./src/routes/meetingRoutes');
 const connectDB = require('./src/config/database');
+const socketHandler = require('./src/socket/socketHandler');
 
 // Route imports
 const authRoutes = require('./src/routes/authRoutes');
@@ -49,13 +50,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/meetings', meetingRoutes);
 // Socket.io logic
-io.on('connection', (socket) => {
-  console.log('A user connected:', socket.id);
-  
-  socket.on('disconnect', () => {
-    console.log('User disconnected:', socket.id);
-  });
-});
+socketHandler(io);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
