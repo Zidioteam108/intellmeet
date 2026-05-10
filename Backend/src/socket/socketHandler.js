@@ -1,3 +1,4 @@
+const ChatMessage = require('../models/ChatMessage');
 const rooms = new Map(); // roomId -> Set of socketIds
 
 const socketHandler = (io) => {
@@ -43,7 +44,18 @@ const socketHandler = (io) => {
     });
 
     // ── Chat Message ───────────────────────────────────────────────────
-    socket.on('chat-message', ({ roomId, message, senderName, senderId }) => {
+    socket.on('chat-message', async ({ roomId, message, senderName, senderId }) => {
+      try {
+        // Save to database
+        await ChatMessage.create({
+          roomId,
+          sender: senderId,
+          message,
+        });
+      } catch (err) {
+        console.error('Chat save error:', err.message);
+      }
+
       io.to(roomId).emit('chat-message', {
         id: Date.now().toString(),
         message,
