@@ -77,6 +77,7 @@ function App() {
             <ProtectedRoute>
               <DashboardLayout><AnalyticsPage /></DashboardLayout>
             </ProtectedRoute>
+          } />
           <Route path="/room/:roomId" element={
             <ProtectedRoute>
               <VideoRoomPage />
