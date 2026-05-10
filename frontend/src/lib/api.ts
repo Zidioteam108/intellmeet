@@ -32,49 +32,44 @@ api.interceptors.request.use(
 // Response Interceptor
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
-    // TEMPORARY MOCK FALLBACK for Auth Routes
-    // This allows the UI to proceed to the dashboard even if the backend is down
-    const isAuthRoute = error.config?.url?.includes('/auth/')
-    const isNetworkError = error.code === 'ERR_NETWORK' || !error.response
-    const isServerError = error.response?.status >= 500
+  async (error) => {
+    const originalRequest = error.config;
 
-    if (isAuthRoute && (isNetworkError || isServerError)) {
-      console.warn('Backend connection failed, activating Temporary Mock Auth Mode')
-      
-      let mockEmail = 'demo@intellmeet.ai'
-      let mockName = 'Premium User'
-      
+    // If error is 401 and not already retrying
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+
       try {
-        const requestData = JSON.parse(error.config.data)
-        mockEmail = requestData.email || mockEmail
-        mockName = requestData.name || 'Premium User'
-      } catch (e) {}
+        // Attempt to refresh token
+        const response = await axios.post(
+          `${API_BASE_URL}/auth/refresh`,
+          {},
+          { withCredentials: true }
+        );
 
-      return Promise.resolve({
-        data: {
-          user: {
-            id: 'mock-user-uuid',
-            name: mockName,
-            email: mockEmail,
-            role: 'user',
-            avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Felix',
-            bio: 'This is a mock account for testing the premium UI dashboard.'
-          },
-          token: 'mock-jwt-token-for-development-purposes'
-        },
-        status: 200,
-        statusText: 'OK',
-        headers: {},
-        config: error.config
-      })
+        const { accessToken } = response.data;
+
+        // Update zustand store
+        const authStorage = localStorage.getItem('intellmeet-auth');
+        if (authStorage) {
+          const authData = JSON.parse(authStorage);
+          authData.state.accessToken = accessToken;
+          localStorage.setItem('intellmeet-auth', JSON.stringify(authData));
+        }
+
+        // Retry original request with new token
+        originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+        return api(originalRequest);
+      } catch (refreshError) {
+        // Refresh failed, logout user
+        localStorage.removeItem('intellmeet-auth');
+        window.location.href = '/login';
+        return Promise.reject(refreshError);
+      }
     }
 
-    if (error.response?.status === 401) {
-      console.warn('Unauthorized request - session may have expired')
-    }
-    return Promise.reject(error)
+    return Promise.reject(error);
   }
-)
+);
 
-export default api
+export default api;
