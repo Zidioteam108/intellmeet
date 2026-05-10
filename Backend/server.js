@@ -12,6 +12,7 @@ const { connectRedis } = require('./src/config/redis');
 // Route imports
 const authRoutes = require('./src/routes/authRoutes');
 const profileRoutes = require('./src/routes/profileRoutes');
+const chatRoutes = require('./src/routes/chatRoutes');
 
 const app = express();
 const server = http.createServer(app);
@@ -49,6 +50,7 @@ app.get('/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/meetings', meetingRoutes);
+app.use('/api/chat', chatRoutes);
 // Socket.io logic
 io.on('connection', (socket) => {
   console.log('A user connected:', socket.id);
