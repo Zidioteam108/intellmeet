@@ -32,7 +32,7 @@ const io = new Server(server, {
 app.use(helmet());
 app.use(
   cors({
-    origin: '*', // Allow all origins for testing
+    origin: process.env.CLIENT_URL || '*',
     credentials: true,
   })
 );
