@@ -60,7 +60,7 @@ npm install
 npm run dev
 ```
 
----
+
 
 ## 📊 Week 1 Progress (Checkpoint Complete ✅)
 - **Infrastructure**: All backend APIs complete (Auth, Profile, Meetings, Chat).
