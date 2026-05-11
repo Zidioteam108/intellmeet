@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { getAllMeetings, createMeeting } from '../api/meetingsApi';
 
 const MeetingsPage = () => {
+  const navigate = useNavigate();
   const [meetings, setMeetings] = useState<any[]>([]);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -44,69 +46,93 @@ const MeetingsPage = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Meetings</h1>
+    <div className="space-y-8 pb-20">
+      <div className="flex items-center justify-between">
+        <h1 className="text-3xl font-black text-slate-900 tracking-tight">Meetings</h1>
+        <div className="h-1 w-12 bg-indigo-600 rounded-full"></div>
+      </div>
 
       {error && (
-        <div className="bg-red-50 text-red-600 border border-red-200 px-4 py-3 rounded-lg text-sm">
-          {error}
+        <div className="bg-red-50 text-red-600 border border-red-100 px-6 py-4 rounded-2xl text-sm font-bold animate-pulse">
+          ⚠️ {error}
         </div>
       )}
 
       {/* Create Meeting Form */}
-      <div className="bg-white rounded-xl border p-6">
-        <h2 className="font-semibold text-lg mb-4">Create New Meeting</h2>
-        <form onSubmit={handleCreate} className="space-y-4">
-          <input
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="Meeting Title"
-            className="w-full border rounded-lg px-3 py-2"
-          />
-          <textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="Description (optional)"
-            className="w-full border rounded-lg px-3 py-2"
-            rows={3}
-          />
+      <div className="bg-white/70 backdrop-blur-xl rounded-[2rem] border border-slate-200 p-8 shadow-xl shadow-indigo-500/5">
+        <h2 className="font-black text-slate-800 text-xl mb-6 flex items-center gap-3">
+          <div className="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center text-indigo-600">✨</div>
+          Create New Meeting
+        </h2>
+        <form onSubmit={handleCreate} className="space-y-6">
+          <div className="space-y-2">
+             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Meeting Title</label>
+             <input
+               value={title}
+               onChange={(e) => setTitle(e.target.value)}
+               placeholder="Enter a descriptive title..."
+               className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-6 py-4 text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all outline-none"
+             />
+          </div>
+          <div className="space-y-2">
+             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Description (Optional)</label>
+             <textarea
+               value={description}
+               onChange={(e) => setDescription(e.target.value)}
+               placeholder="What is this meeting about?"
+               className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-6 py-4 text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all outline-none"
+               rows={3}
+             />
+          </div>
           <button
             type="submit"
             disabled={isCreating}
-            className="bg-blue-600 text-white px-6 py-2 rounded-lg"
+            className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white px-10 py-4 rounded-2xl font-black text-sm shadow-xl shadow-indigo-500/20 transition-all active:scale-95 disabled:opacity-50"
           >
-            {isCreating ? 'Creating...' : 'Create Meeting'}
+            {isCreating ? '🚀 Launching...' : 'Start New Meeting'}
           </button>
         </form>
       </div>
 
       {/* Meetings List */}
-      <div className="bg-white rounded-xl border p-6">
-        <h2 className="font-semibold text-lg mb-4">Your Meetings</h2>
+      <div className="space-y-4">
+        <h2 className="font-black text-slate-800 text-xl px-2">Your Meetings</h2>
         {isLoading ? (
-          <p className="text-gray-400">Loading meetings...</p>
+          <div className="p-12 text-center bg-white/50 rounded-[2rem] border border-dashed border-slate-300">
+             <div className="animate-spin w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full mx-auto mb-4"></div>
+             <p className="text-slate-400 font-bold uppercase text-[10px] tracking-widest">Syncing with cloud...</p>
+          </div>
         ) : meetings.length === 0 ? (
-          <p className="text-gray-400">No meetings yet. Create your first one!</p>
+          <div className="p-12 text-center bg-white/50 rounded-[2rem] border border-dashed border-slate-300">
+             <p className="text-slate-400 font-bold text-sm">No meetings scheduled yet.</p>
+          </div>
         ) : (
-          <div className="space-y-3">
+          <div className="grid grid-cols-1 gap-4">
             {meetings.map((meeting) => (
-              <div key={meeting._id} className="border rounded-lg p-4 flex justify-between items-center">
-                <div>
-                  <h3 className="font-medium">{meeting.title}</h3>
-                  <p className="text-sm text-gray-400">Room: {meeting.roomId}</p>
-                  <p className="text-sm text-gray-400">
-                    Host: {meeting.host?.name || 'Unknown'}
-                  </p>
+              <div key={meeting._id} className="group bg-white hover:bg-indigo-50/30 rounded-[2rem] border border-slate-200 p-6 sm:p-8 flex flex-col sm:flex-row justify-between items-start sm:items-center transition-all duration-500 hover:shadow-2xl hover:shadow-indigo-500/5 hover:-translate-y-1">
+                <div className="mb-6 sm:mb-0 space-y-2">
+                  <h3 className="font-black text-slate-900 text-lg group-hover:text-indigo-600 transition-colors">{meeting.title}</h3>
+                  <div className="flex flex-wrap gap-4 items-center">
+                    <div className="flex items-center gap-2 px-3 py-1 bg-slate-100 rounded-full border border-slate-200">
+                       <span className="text-[10px] font-black text-slate-500 uppercase">ID: {meeting.roomId}</span>
+                    </div>
+                    <p className="text-[10px] font-black text-indigo-500 uppercase tracking-widest">
+                      HOST: {meeting.host?.name || 'You'}
+                    </p>
+                  </div>
                 </div>
-                <div className="flex gap-2 items-center">
-                  <span className={`text-xs px-2 py-1 rounded-full ${
+                <div className="flex w-full sm:w-auto gap-3 items-center justify-between sm:justify-end">
+                  <span className={`text-[10px] font-black uppercase tracking-widest px-4 py-2 rounded-xl ${
                     meeting.status === 'active'
-                      ? 'bg-green-100 text-green-700'
-                      : 'bg-yellow-100 text-yellow-700'
+                      ? 'bg-emerald-100 text-emerald-700 border border-emerald-200'
+                      : 'bg-amber-100 text-amber-700 border border-amber-200'
                   }`}>
                     {meeting.status}
                   </span>
-                  <button className="bg-blue-600 text-white text-sm px-3 py-1 rounded-lg">
+                  <button 
+                    onClick={() => navigate(`/room/${meeting.roomId}`)}
+                    className="flex-1 sm:flex-none bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black uppercase tracking-widest px-8 py-4 rounded-2xl shadow-xl shadow-indigo-600/20 active:scale-95 transition-all"
+                  >
                     Start
                   </button>
                 </div>

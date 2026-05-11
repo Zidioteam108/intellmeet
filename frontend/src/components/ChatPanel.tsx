@@ -51,12 +51,19 @@ const ChatPanel = ({ roomId, currentUserId, currentUserName }: Props) => {
     e.preventDefault()
     if (!inputText.trim() || !socket) return
 
-    socket.emit('chat-message', {
+    const messageData = {
       roomId,
       message: inputText.trim(),
       senderId: currentUserId,
       senderName: currentUserName,
-    })
+      id: Date.now().toString(),
+      time: new Date().toISOString(),
+    }
+
+    // Emit to server
+    socket.emit('chat-message', messageData)
+    
+    // Clear input
     setInputText('')
   }
 

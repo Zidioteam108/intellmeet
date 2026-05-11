@@ -73,7 +73,17 @@ const VideoRoomPage = () => {
             </div>
           </div>
 
-          <div className="flex gap-3 items-center">
+            <button
+              onClick={() => {
+                const url = window.location.href;
+                navigator.clipboard.writeText(url);
+                alert('Invite link copied to clipboard! Share it with your friend.');
+              }}
+              className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-[10px] font-bold uppercase tracking-widest rounded-lg shadow-lg shadow-indigo-600/20 transition-all"
+            >
+              🔗 Invite Friend
+            </button>
+
             <div className="flex bg-white/5 p-1 rounded-xl border border-white/5 gap-1">
               <button
                 onClick={toggleMute}
