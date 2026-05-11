@@ -10,7 +10,11 @@ export const connectSocket = (token: string): Socket => {
     socket.disconnect();
   }
 
-  socket = io(import.meta.env.VITE_API_URL || 'http://localhost:5000', {
+  // VITE_API_URL typically ends with /api (e.g. https://backend.com/api)
+  // Socket.io needs the base URL, so we strip /api from the end.
+  const baseUrl = (import.meta.env.VITE_API_URL || 'http://localhost:5000').replace(/\/api\/?$/, '');
+
+  socket = io(baseUrl, {
     auth: { token },
     transports: ['websocket'],
   })
