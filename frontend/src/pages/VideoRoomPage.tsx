@@ -120,11 +120,10 @@ const VideoRoomPage = () => {
             >
               End Call
             </button>
-          </div>
         </div>
 
         {/* Video Grid */}
-        <div className="flex-1 p-6 flex items-center justify-center">
+        <div className="flex-1 p-6 flex items-center justify-center overflow-y-auto">
           <div className={`grid gap-6 w-full max-w-6xl mx-auto ${
             remoteStreams.length === 0
               ? 'max-w-3xl'
