@@ -19,33 +19,49 @@ const AnalyticsPage = () => (
   <div className="p-8"><h1 className="text-3xl font-black text-slate-900 mb-4">Analytics</h1><p className="text-slate-500 font-medium">This module is coming soon in the next phase of development.</p></div>
 )
 
+import useAuthInit from './hooks/useAuthInit';
+import { useAuthStore } from './store/authStore';
+
 function App() {
   const location = useLocation()
-  const [isLoading, setIsLoading] = useState(true)
+  useAuthInit();
+  const { isLoading: isAuthLoading } = useAuthStore();
+  const [isPreloading, setIsPreloading] = useState(true)
 
   useEffect(() => {
     // Show preloader on initial load and when navigating to specified public routes
     const publicRoutes = ['/', '/login', '/signup']
     
     if (publicRoutes.includes(location.pathname)) {
-      setIsLoading(true)
+      setIsPreloading(true)
       const timer = setTimeout(() => {
-        setIsLoading(false)
+        setIsPreloading(false)
       }, 1500) // 1.5s as requested
       return () => clearTimeout(timer)
     } else {
       // For dashboard and other internal pages, don't show the full-screen preloader
       // unless it's the very first mount (handled by initial state true -> false)
-      const initialTimer = setTimeout(() => setIsLoading(false), 500)
+      const initialTimer = setTimeout(() => setIsPreloading(false), 500)
       return () => clearTimeout(initialTimer)
     }
   }, [location.pathname])
 
+  if (isAuthLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="text-center animate-pulse">
+          <div className="text-4xl mb-3">🛰️</div>
+          <p className="text-slate-500 font-medium text-sm">Initializing IntellMeet...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <>
-      <Preloader isLoading={isLoading} />
+      <Preloader isLoading={isPreloading} />
       
-      <div className={`transition-all duration-1000 ${isLoading ? 'opacity-0 translate-y-4 scale-95 blur-sm' : 'opacity-100 translate-y-0 scale-100 blur-0'}`}>
+      <div className={`transition-all duration-1000 ${isPreloading ? 'opacity-0 translate-y-4 scale-95 blur-sm' : 'opacity-100 translate-y-0 scale-100 blur-0'}`}>
         <Routes>
           {/* Public routes */}
           <Route path="/" element={<LandingPage />} />
