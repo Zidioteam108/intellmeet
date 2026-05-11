@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { getSocket } from '../utils/socket';
+import { Socket } from 'socket.io-client';
 
 // ICE server config — tells WebRTC where to find the STUN server
 const ICE_SERVERS = {
@@ -15,7 +15,7 @@ interface RemoteStream {
   userName: string;
 }
 
-const useWebRTC = (roomId: string, userName: string) => {
+const useWebRTC = (socket: Socket | null, roomId: string, userName: string) => {
   // Local camera and mic stream
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
 
@@ -34,8 +34,6 @@ const useWebRTC = (roomId: string, userName: string) => {
 
   // Keep a ref to local stream for access inside event handlers
   const localStreamRef = useRef<MediaStream | null>(null);
-
-  const socket = getSocket();
 
   // ─────────────────────────────────────────────────────────────────────────
   // Step A — Get camera and microphone

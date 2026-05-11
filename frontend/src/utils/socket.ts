@@ -3,7 +3,12 @@ import { io, Socket } from 'socket.io-client'
 let socket: Socket | null = null
 
 export const connectSocket = (token: string): Socket => {
-  if (socket && socket.connected) return socket
+  if (socket) {
+    if (socket.connected && socket.auth && (socket.auth as any).token === token) {
+      return socket;
+    }
+    socket.disconnect();
+  }
 
   socket = io(import.meta.env.VITE_API_URL || 'http://localhost:5000', {
     auth: { token },

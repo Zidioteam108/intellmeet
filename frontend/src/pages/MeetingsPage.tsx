@@ -59,7 +59,7 @@ const MeetingsPage = () => {
       )}
 
       {/* Create Meeting Form */}
-      <div className="bg-white/70 backdrop-blur-xl rounded-[2rem] border border-slate-200 p-8 shadow-xl shadow-indigo-500/5">
+      <div className="bg-white/70 backdrop-blur-xl rounded-[2rem] border border-slate-200 p-5 sm:p-8 shadow-xl shadow-indigo-500/5">
         <h2 className="font-black text-slate-800 text-xl mb-6 flex items-center gap-3">
           <div className="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center text-indigo-600">✨</div>
           Create New Meeting

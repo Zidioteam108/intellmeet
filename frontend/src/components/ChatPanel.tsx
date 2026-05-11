@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { getSocket } from '@/utils/socket'
+import { Socket } from 'socket.io-client'
 
 interface Message {
   id: string
@@ -11,16 +11,17 @@ interface Message {
 }
 
 interface Props {
+  socket: Socket | null
   roomId: string
   currentUserId: string
   currentUserName: string
+  onClose?: () => void
 }
 
-const ChatPanel = ({ roomId, currentUserId, currentUserName }: Props) => {
+const ChatPanel = ({ socket, roomId, currentUserId, currentUserName, onClose }: Props) => {
   const [messages, setMessages] = useState<Message[]>([])
   const [inputText, setInputText] = useState('')
   const bottomRef = useRef<HTMLDivElement>(null)
-  const socket = getSocket()
 
   useEffect(() => {
     if (!socket) return
@@ -68,42 +69,62 @@ const ChatPanel = ({ roomId, currentUserId, currentUserName }: Props) => {
   }
 
   return (
-    <div className="flex flex-col h-full bg-white border-l border-gray-200">
-      <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
-        <h3 className="text-sm font-semibold text-gray-800">Meeting Chat</h3>
+    <div className="flex flex-col h-full bg-[#121215]/80 sm:bg-transparent backdrop-blur-2xl">
+      <div className="px-4 py-4 border-b border-white/5 bg-white/5 flex items-center justify-between">
+        <h3 className="text-sm font-bold text-white flex items-center gap-2">
+          <span className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></span>
+          Meeting Chat
+        </h3>
+        {onClose && (
+          <button 
+            onClick={onClose}
+            className="sm:hidden text-slate-400 hover:text-white p-2 rounded-lg hover:bg-white/10 transition-colors"
+          >
+            ✕
+          </button>
+        )}
       </div>
 
-      <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3">
+      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4 custom-scrollbar">
         {messages.length === 0 && (
-          <p className="text-xs text-gray-400 text-center mt-4">No messages yet. Say hello! 👋</p>
+          <div className="text-center mt-10 space-y-3">
+            <div className="w-12 h-12 bg-white/5 rounded-full flex items-center justify-center mx-auto text-xl">
+              👋
+            </div>
+            <p className="text-xs text-slate-400 font-medium">No messages yet. Say hello!</p>
+          </div>
         )}
         {messages.map((msg) => (
           <div key={msg.id} className={`flex flex-col ${msg.isMine ? 'items-end' : 'items-start'}`}>
             {!msg.isMine && (
-              <span className="text-xs text-gray-400 mb-1">{msg.senderName}</span>
+              <span className="text-[10px] text-slate-400 font-bold mb-1 ml-1">{msg.senderName}</span>
             )}
-            <div className={`max-w-[80%] px-3 py-2 rounded-xl text-sm ${
+            <div className={`max-w-[85%] px-4 py-2.5 text-sm shadow-xl ${
               msg.isMine
-                ? 'bg-blue-600 text-white rounded-br-sm'
-                : 'bg-gray-100 text-gray-800 rounded-bl-sm'
+                ? 'bg-blue-600 text-white rounded-2xl rounded-tr-sm shadow-blue-900/20'
+                : 'bg-white/10 text-slate-200 rounded-2xl rounded-tl-sm border border-white/5'
             }`}>
               {msg.message}
             </div>
-            <span className="text-xs text-gray-400 mt-1">{msg.time}</span>
+            <span className="text-[9px] text-slate-500 font-bold mt-1.5 uppercase tracking-widest">{msg.time}</span>
           </div>
         ))}
         <div ref={bottomRef} />
       </div>
 
-      <form onSubmit={sendMessage} className="border-t border-gray-200 p-3 flex gap-2">
+      <form onSubmit={sendMessage} className="border-t border-white/5 p-4 bg-white/5 flex gap-3">
         <input
           type="text"
           value={inputText}
           onChange={(e) => setInputText(e.target.value)}
           placeholder="Type a message..."
-          className="flex-1 text-sm px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="flex-1 text-sm px-4 py-3 bg-[#0a0a0c] text-white border border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all placeholder:text-slate-500 shadow-inner"
         />
-        <button type="submit" className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors">
+        <button 
+          type="submit" 
+          disabled={!inputText.trim()}
+          className="px-5 py-3 bg-blue-600 disabled:opacity-50 disabled:hover:bg-blue-600 text-white text-sm font-bold rounded-xl hover:bg-blue-500 transition-all shadow-lg shadow-blue-600/20 active:scale-95"
+        >
           Send
         </button>
       </form>
