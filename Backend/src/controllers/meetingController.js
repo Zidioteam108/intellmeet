@@ -38,6 +38,7 @@ const getMeetings = async (req, res) => {
     $or: [{ host: req.user._id }, { participants: req.user._id }],
   })
     .populate('host', 'name email avatar')
+    .populate('participants', 'name email avatar')
     .sort({ createdAt: -1 });
 
   // Save to cache for next request
