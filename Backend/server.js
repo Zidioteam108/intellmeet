@@ -93,14 +93,23 @@ const PORT = process.env.PORT || 5000;
 
 const startServer = async () => {
   try {
+    console.log('🔌 Connecting to MongoDB...');
     await connectDB();
+    console.log('✅ MongoDB Connected successfully');
+
+    console.log('🔌 Connecting to Redis...');
     connectRedis();
-    server.listen(PORT, () => {
-      console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
+
+    console.log(`🔌 Attempting to listen on port ${PORT}...`);
+    server.listen(PORT, '0.0.0.0', () => {
+      console.log(`🚀 Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
     });
   } catch (error) {
-    console.error('Failed to start server:', error);
-    process.exit(1);
+    console.error('❌ CRITICAL: Failed to start server:', error);
+    // Don't exit immediately in production to allow Render to see the error log
+    if (process.env.NODE_ENV !== 'production') {
+      process.exit(1);
+    }
   }
 };
 
