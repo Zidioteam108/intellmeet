@@ -21,7 +21,7 @@ const getProfile = async (req, res) => {
       name: user.name,
       email: user.email,
       role: user.role,
-      avatar: user.avatar,
+      avatar: user.avatar || '',
       bio: user.bio || '',
       createdAt: user.createdAt,
     },
