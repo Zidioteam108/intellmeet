@@ -54,6 +54,7 @@ const useWebRTC = (socket: Socket | null, roomId: string, userName: string) => {
         const audioOnly = await navigator.mediaDevices.getUserMedia({ audio: true });
         localStreamRef.current = audioOnly;
         setLocalStream(audioOnly);
+        setIsCameraOff(true); // Automatically set camera off since we don't have video
         return audioOnly;
       } catch {
         return null;
