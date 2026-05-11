@@ -13,16 +13,9 @@ const api = axios.create({
 // Request Interceptor
 api.interceptors.request.use(
   (config) => {
-    const authStorage = localStorage.getItem('intellmeet-auth')
-    if (authStorage) {
-      try {
-        const { state } = JSON.parse(authStorage)
-        if (state?.accessToken) {
-          config.headers.Authorization = `Bearer ${state.accessToken}`
-        }
-      } catch (e) {
-        console.error('Error parsing auth storage', e)
-      }
+    const token = localStorage.getItem('intellmeet_token')
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`
     }
     return config
   },
@@ -49,20 +42,15 @@ api.interceptors.response.use(
 
         const { accessToken } = response.data;
 
-        // Update zustand store
-        const authStorage = localStorage.getItem('intellmeet-auth');
-        if (authStorage) {
-          const authData = JSON.parse(authStorage);
-          authData.state.accessToken = accessToken;
-          localStorage.setItem('intellmeet-auth', JSON.stringify(authData));
-        }
+        // Update localStorage
+        localStorage.setItem('intellmeet_token', accessToken);
 
         // Retry original request with new token
         originalRequest.headers.Authorization = `Bearer ${accessToken}`;
         return api(originalRequest);
       } catch (refreshError) {
         // Refresh failed, logout user
-        localStorage.removeItem('intellmeet-auth');
+        localStorage.removeItem('intellmeet_token');
         window.location.href = '/login';
         return Promise.reject(refreshError);
       }
