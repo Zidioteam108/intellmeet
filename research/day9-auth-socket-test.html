@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Auth Socket Test</title>
+  <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
+</head>
+<body>
+  <h2>Day 9 — Authenticated Socket Test</h2>
+  <input id="tokenInput" placeholder="Paste accessToken here" style="width:500px;padding:8px;" />
+  <br><br>
+  <button onclick="connect()">Connect Socket</button>
+  <button onclick="joinRoom()">Join Room</button>
+  <div id="log" style="margin-top:20px;font-family:monospace;"></div>
+
+  <script>
+    let socket;
+    const log = (msg) => {
+      document.getElementById('log').innerHTML += '<p>' + msg + '</p>';
+    };
+
+    function connect() {
+      const token = document.getElementById('tokenInput').value.trim();
+      socket = io('http://localhost:5000', {
+        auth: { token },
+        transports: ['websocket'],
+      });
+      socket.on('connect', () => log('Connected: ' + socket.id));
+      socket.on('connect_error', (err) => log('Error: ' + err.message));
+      socket.on('user-joined', (data) => log('User joined: ' + JSON.stringify(data)));
+      socket.on('room-info', (data) => log('Room info: ' + JSON.stringify(data)));
+    }
+
+    function joinRoom() {
+      socket.emit('join-room', { roomId: 'test-room-001', userName: 'Tester' });
+    }
+  </script>
+</body>
+</html>
