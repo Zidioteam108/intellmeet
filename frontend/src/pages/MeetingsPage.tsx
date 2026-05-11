@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { getAllMeetings, createMeeting } from '../api/meetingsApi';
 
 const MeetingsPage = () => {
+  const navigate = useNavigate();
   const [meetings, setMeetings] = useState<any[]>([]);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -106,7 +107,10 @@ const MeetingsPage = () => {
                   }`}>
                     {meeting.status}
                   </span>
-                  <button className="bg-blue-600 text-white text-sm px-3 py-1 rounded-lg">
+                  <button 
+                    onClick={() => navigate(`/room/${meeting.roomId}`)}
+                    className="bg-blue-600 hover:bg-blue-700 transition-colors text-white text-sm px-4 py-1.5 rounded-lg font-semibold shadow-lg shadow-blue-600/20"
+                  >
                     Start
                   </button>
                 </div>
