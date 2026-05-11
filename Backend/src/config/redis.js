@@ -4,6 +4,11 @@ let redis;
 
 const connectRedis = () => {
   try {
+    if (!process.env.REDIS_URL) {
+      console.warn('⚠️ REDIS_URL not found. Caching will be disabled.');
+      return null;
+    }
+
     redis = new Redis(process.env.REDIS_URL, {
       maxRetriesPerRequest: 3,
       tls: process.env.REDIS_URL.includes('upstash.io') ? {} : undefined,
