@@ -72,6 +72,7 @@ npm run dev
 ## 📊 Week 2 Progress
 - [x] Day 8 — Auth connected to frontend, refresh token API, Socket.io auth
 - [x] Day 9 — Token persistence, meetings API connected, auth socket tested
+- [x] Day 10 — Real WebRTC video in React, useWebRTC hook, live chat in room
 
 ---
 
