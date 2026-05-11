@@ -32,8 +32,8 @@ const LoginPage = () => {
         password,
       })
 
-      const { user, token } = response.data
-      setAuth(user, token)
+      const { user, accessToken } = response.data
+      setAuth(user, accessToken)
       navigate('/dashboard')
     } catch (err: any) {
       setError(err.response?.data?.message || 'Login failed. Please check your credentials.')
