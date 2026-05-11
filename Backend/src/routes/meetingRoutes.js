@@ -7,6 +7,7 @@ const {
   getMeetingById,
   updateMeeting,
   deleteMeeting,
+  joinMeeting,
 } = require('../controllers/meetingController');
 
 router.use(protect);
@@ -19,5 +20,7 @@ router.route('/:id')
   .get(getMeetingById)
   .put(updateMeeting)
   .delete(deleteMeeting);
+
+router.get('/join/:roomId', joinMeeting);
 
 module.exports = router;

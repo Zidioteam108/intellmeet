@@ -94,6 +94,51 @@ const updateMeeting = async (req, res) => {
   });
 };
 
+const joinMeeting = async (req, res) => {
+  const { roomId } = req.params;
+
+  // Find meeting by roomId
+  const meeting = await Meeting.findOne({ roomId })
+    .populate('host', 'name email avatar')
+    .populate('participants', 'name email avatar');
+
+  if (!meeting) {
+    return res.status(404).json({
+      success: false,
+      message: 'Meeting not found. Check the Room ID.',
+    });
+  }
+
+  // Check if user is already in participants list
+  const alreadyJoined = meeting.participants.some(
+    (p) => p._id.toString() === req.user._id.toString()
+  );
+
+  // If not already a participant, add them
+  if (!alreadyJoined) {
+    meeting.participants.push(req.user._id);
+  }
+
+  // Update status to active when someone joins
+  if (meeting.status === 'scheduled') {
+    meeting.status = 'active';
+    meeting.startedAt = new Date();
+  }
+
+  await meeting.save();
+
+  // Re-fetch with populated fields after save
+  const updatedMeeting = await Meeting.findById(meeting._id)
+    .populate('host', 'name email avatar')
+    .populate('participants', 'name email avatar');
+
+  res.status(200).json({
+    success: true,
+    message: 'Joined meeting successfully',
+    meeting: updatedMeeting,
+  });
+};
+
 const deleteMeeting = async (req, res) => {
   const meeting = await Meeting.findById(req.params.id);
 
@@ -119,4 +164,5 @@ module.exports = {
   getMeetingById,
   updateMeeting,
   deleteMeeting,
+  joinMeeting,
 };
