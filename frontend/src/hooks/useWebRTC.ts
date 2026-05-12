@@ -236,6 +236,58 @@ const useWebRTC = (socket: Socket | null, roomId: string, userName: string) => {
   }, [socket, roomId]);
 
   // ─────────────────────────────────────────────────────────────────────────
+  // Screen Sharing — replaces camera with screen stream
+  // ─────────────────────────────────────────────────────────────────────────
+  const [isScreenSharing, setIsScreenSharing] = useState(false);
+
+  const startScreenShare = useCallback(async () => {
+    try {
+      // Ask browser to show the screen picker dialog
+      const screenStream = await navigator.mediaDevices.getDisplayMedia({
+        video: true,
+        audio: false,
+      });
+
+      const screenTrack = screenStream.getVideoTracks()[0];
+
+      // Replace the camera video track in all peer connections
+      peerConnections.current.forEach((pc) => {
+        const sender = pc.getSenders().find((s) => s.track?.kind === 'video');
+        if (sender) {
+          sender.replaceTrack(screenTrack);
+        }
+      });
+
+      // Show screen in local video
+      setLocalStream(screenStream);
+      setIsScreenSharing(true);
+
+      // When user stops sharing from browser button
+      screenTrack.onended = () => {
+        stopScreenShare();
+      };
+
+    } catch (err) {
+      console.error('Screen share error:', err);
+    }
+  }, []);
+
+  const stopScreenShare = useCallback(async () => {
+    const cameraStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+
+    const cameraTrack = cameraStream.getVideoTracks()[0];
+
+    peerConnections.current.forEach((pc) => {
+      const sender = pc.getSenders().find((s) => s.track?.kind === 'video');
+      if (sender) sender.replaceTrack(cameraTrack);
+    });
+
+    setLocalStream(cameraStream);
+    localStreamRef.current = cameraStream;
+    setIsScreenSharing(false);
+  }, []);
+
+  // ─────────────────────────────────────────────────────────────────────────
   // Return everything the component needs
   // ─────────────────────────────────────────────────────────────────────────
   return {
@@ -243,10 +295,13 @@ const useWebRTC = (socket: Socket | null, roomId: string, userName: string) => {
     remoteStreams,
     isMuted,
     isCameraOff,
+    isScreenSharing,
     joinRoom,
     leaveRoom,
     toggleMute,
     toggleCamera,
+    startScreenShare,
+    stopScreenShare,
   };
 };
 

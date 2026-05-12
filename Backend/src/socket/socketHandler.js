@@ -94,6 +94,15 @@ const socketHandler = (io) => {
       });
     });
 
+    // ── Typing Indicator ───────────────────────────────────────────────
+    socket.on('typing-start', ({ roomId, userName }) => {
+      socket.to(roomId).emit('typing-start', { userName, socketId: socket.id });
+    });
+
+    socket.on('typing-stop', ({ roomId }) => {
+      socket.to(roomId).emit('typing-stop', { socketId: socket.id });
+    });
+
     // ── Mute/Unmute Status ─────────────────────────────────────────────
     socket.on('toggle-audio', ({ roomId, isMuted }) => {
       socket.to(roomId).emit('user-audio-toggle', { socketId: socket.id, isMuted });

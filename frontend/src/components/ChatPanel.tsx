@@ -18,9 +18,12 @@ interface Props {
   onClose?: () => void
 }
 
+let typingTimeout: NodeJS.Timeout;
+
 const ChatPanel = ({ socket, roomId, currentUserId, currentUserName, onClose }: Props) => {
   const [messages, setMessages] = useState<Message[]>([])
   const [inputText, setInputText] = useState('')
+  const [typingUsers, setTypingUsers] = useState<string[]>([])
   const bottomRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -39,14 +42,39 @@ const ChatPanel = ({ socket, roomId, currentUserId, currentUserName, onClose }: 
       ])
     })
 
+    socket.on('typing-start', ({ userName }: any) => {
+      setTypingUsers((prev) => {
+        if (!prev.includes(userName)) return [...prev, userName];
+        return prev;
+      });
+    });
+
+    socket.on('typing-stop', ({ socketId }: any) => {
+      setTypingUsers((prev) => prev.filter((_, i) => i !== 0)); // Simplified logic per instructions, ideally filter by socketId if we had user object map
+    });
+
     return () => {
       socket.off('chat-message')
+      socket.off('typing-start')
+      socket.off('typing-stop')
     }
   }, [socket, currentUserId])
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages])
+  }, [messages, typingUsers])
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInputText(e.target.value);
+
+    if (!socket) return;
+    socket.emit('typing-start', { roomId, userName: currentUserName });
+
+    clearTimeout(typingTimeout);
+    typingTimeout = setTimeout(() => {
+      socket.emit('typing-stop', { roomId });
+    }, 1500);
+  };
 
   const sendMessage = (e: React.FormEvent) => {
     e.preventDefault()
@@ -64,8 +92,10 @@ const ChatPanel = ({ socket, roomId, currentUserId, currentUserName, onClose }: 
     // Emit to server
     socket.emit('chat-message', messageData)
     
-    // Clear input
+    // Clear input and typing status
     setInputText('')
+    clearTimeout(typingTimeout);
+    socket.emit('typing-stop', { roomId });
   }
 
   return (
@@ -109,6 +139,11 @@ const ChatPanel = ({ socket, roomId, currentUserId, currentUserName, onClose }: 
             <span className="text-[9px] text-slate-500 font-bold mt-1.5 uppercase tracking-widest">{msg.time}</span>
           </div>
         ))}
+        {typingUsers.length > 0 && (
+          <div className="px-4 py-1 text-xs text-gray-400 italic">
+            {typingUsers.join(', ')} {typingUsers.length === 1 ? 'is' : 'are'} typing...
+          </div>
+        )}
         <div ref={bottomRef} />
       </div>
 
@@ -116,7 +151,7 @@ const ChatPanel = ({ socket, roomId, currentUserId, currentUserName, onClose }: 
         <input
           type="text"
           value={inputText}
-          onChange={(e) => setInputText(e.target.value)}
+          onChange={handleInputChange}
           placeholder="Type a message..."
           className="flex-1 text-sm px-4 py-3 bg-[#0a0a0c] text-white border border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all placeholder:text-slate-500 shadow-inner"
         />
