@@ -33,6 +33,11 @@ const socketHandler = (io) => {
   io.on('connection', (socket) => {
     console.log(`✅ Socket connected: ${socket.id} — User: ${socket.user?.name}`);
 
+    // ── Join Personal Room (for Notifications) ─────────────────────────
+    socket.on('join-personal', ({ userId }) => {
+      socket.join(`user:${userId}`);
+    });
+
     // ── Join Room ──────────────────────────────────────────────────────
     socket.on('join-room', ({ roomId, userId, userName }) => {
       socket.join(roomId);
@@ -127,4 +132,9 @@ const socketHandler = (io) => {
   });
 };
 
-module.exports = socketHandler;
+// Emit notification to a specific user
+const sendNotification = (io, userId, notification) => {
+  io.to(`user:${userId}`).emit('notification', notification);
+};
+
+module.exports = { socketHandler, sendNotification };

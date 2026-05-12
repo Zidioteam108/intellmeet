@@ -10,7 +10,7 @@ const { Server } = require('socket.io');
 const meetingRoutes = require('./src/routes/meetingRoutes');
 const connectDB = require('./src/config/database');
 const { connectRedis } = require('./src/config/redis');
-const socketHandler = require('./src/socket/socketHandler');
+const { socketHandler } = require('./src/socket/socketHandler');
 
 // Route imports
 const authRoutes = require('./src/routes/authRoutes');
@@ -78,6 +78,8 @@ const transcriptionRoutes = require('./src/routes/transcriptionRoutes');
 app.use('/api/transcription', transcriptionRoutes);
 const summaryRoutes = require('./src/routes/summaryRoutes');
 app.use('/api/summary', summaryRoutes);
+const taskRoutes = require('./src/routes/taskRoutes');
+app.use('/api/tasks', taskRoutes);
 
 // Socket.io logic
 
