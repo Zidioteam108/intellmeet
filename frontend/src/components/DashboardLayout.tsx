@@ -49,7 +49,7 @@ const DashboardLayout = ({ children }: Props) => {
   }
 
   return (
-    <div className="flex h-screen bg-[#f8fafc] overflow-x-hidden font-sans w-screen max-w-full relative touch-pan-y overscroll-none">
+    <div className="flex h-[100dvh] bg-[#f8fafc] overflow-x-hidden font-sans w-screen max-w-full relative touch-pan-y overscroll-none">
       
       {/* Background Gradients */}
       <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-indigo-100/30 rounded-full blur-[140px] -z-10 opacity-60"></div>
@@ -209,7 +209,7 @@ const DashboardLayout = ({ children }: Props) => {
       </div>
 
       {/* ── MOBILE BOTTOM NAVIGATION (Fixed to edge) ── */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-[9999] bg-white border-t border-slate-200 h-20 px-2 shadow-[0_-8px_20px_rgba(0,0,0,0.08)] flex items-center justify-around">
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-[9999] bg-white border-t border-slate-200 h-20 px-2 pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_20px_rgba(0,0,0,0.08)] flex items-center justify-around">
         {navItems.map((item) => {
           const Icon = item.icon
           const isActive = location.pathname === item.path
