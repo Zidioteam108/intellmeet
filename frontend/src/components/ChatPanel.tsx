@@ -18,7 +18,7 @@ interface Props {
   onClose?: () => void
 }
 
-let typingTimeout: NodeJS.Timeout;
+let typingTimeout: ReturnType<typeof setTimeout>;
 
 const ChatPanel = ({ socket, roomId, currentUserId, currentUserName, onClose }: Props) => {
   const [messages, setMessages] = useState<Message[]>([])
