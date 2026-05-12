@@ -143,7 +143,7 @@ const AnalyticsPage = () => {
                        <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: COLORS[idx % COLORS.length] }}></div>
                        <span>{entry.name}</span>
                      </div>
-                     <span>{entry.value}</span>
+                     <span>{String(entry.value)}</span>
                    </div>
                 ))}
               </div>

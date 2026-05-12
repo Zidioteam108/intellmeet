@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
+import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
+import type { DropResult } from '@hello-pangea/dnd';
 import { getTasks, createTask, updateTaskStatus } from '../api/taskApi';
 
 const COLUMNS = ['todo', 'in-progress', 'review', 'done'];
