@@ -140,6 +140,7 @@ const VideoRoomPage = () => {
             <div className="flex bg-white/5 p-1 rounded-xl border border-white/5 gap-1">
               <button
                 onClick={toggleMute}
+                aria-label={isMuted ? 'Unmute microphone' : 'Mute microphone'}
                 className={`w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-lg transition-all duration-300 ${
                   isMuted ? 'bg-red-500/20 text-red-500 border border-red-500/30' : 'text-slate-300 hover:bg-white/10'
                 }`}
@@ -149,6 +150,7 @@ const VideoRoomPage = () => {
               </button>
               <button
                 onClick={toggleCamera}
+                aria-label={isCameraOff ? 'Turn camera on' : 'Turn camera off'}
                 className={`w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-lg transition-all duration-300 ${
                   isCameraOff ? 'bg-red-500/20 text-red-500 border border-red-500/30' : 'text-slate-300 hover:bg-white/10'
                 }`}
@@ -158,6 +160,7 @@ const VideoRoomPage = () => {
               </button>
               <button
                 onClick={() => setShowChat(!showChat)}
+                aria-label={showChat ? 'Close chat panel' : 'Open chat panel'}
                 className={`w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-lg transition-all duration-300 ${
                   showChat ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' : 'text-slate-300 hover:bg-white/10'
                 }`}
@@ -182,8 +185,8 @@ const VideoRoomPage = () => {
             remoteStreams.length === 0
               ? 'max-w-3xl grid-cols-1'
               : remoteStreams.length === 1
-              ? 'grid-cols-1 sm:grid-cols-2'
-              : 'grid-cols-2 lg:grid-cols-3'
+              ? 'grid-cols-1 md:grid-cols-2'
+              : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
           }`}>
 
             {/* Local video (your own camera) */}

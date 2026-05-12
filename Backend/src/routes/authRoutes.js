@@ -1,11 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const rateLimit = require('express-rate-limit');
+const { body } = require('express-validator');
 const { signup, login, refreshAccessToken, logout } = require('../controllers/authController');
 const { protect } = require('../middleware/authMiddleware');
+const validateRequest = require('../middleware/validateRequest');
 
 // Rate limiter — allows only 10 attempts per 15 minutes on auth routes
-// This blocks brute-force attacks where someone tries many passwords
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 10,
@@ -17,13 +18,38 @@ const authLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-// Public routes (no login required)
-router.post('/signup', authLimiter, signup);
-router.post('/login', authLimiter, login);
+// Signup validation rules
+const signupValidation = [
+  body('name')
+    .trim()
+    .notEmpty().withMessage('Name is required')
+    .isLength({ min: 2, max: 50 }).withMessage('Name must be 2-50 characters'),
+  body('email')
+    .trim()
+    .notEmpty().withMessage('Email is required')
+    .isEmail().withMessage('Must be a valid email address'),
+  body('password')
+    .notEmpty().withMessage('Password is required')
+    .isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
+];
+
+// Login validation rules
+const loginValidation = [
+  body('email')
+    .trim()
+    .notEmpty().withMessage('Email is required')
+    .isEmail().withMessage('Must be a valid email address'),
+  body('password')
+    .notEmpty().withMessage('Password is required'),
+];
+
+// Public routes
+router.post('/signup', authLimiter, signupValidation, validateRequest, signup);
+router.post('/login', authLimiter, loginValidation, validateRequest, login);
 router.post('/refresh', refreshAccessToken);
 router.post('/logout', logout);
 
-// Protected test route (requires login) — useful for testing middleware
+// Protected test route
 router.get('/me', protect, async (req, res) => {
   res.status(200).json({
     success: true,
@@ -37,3 +63,4 @@ router.get('/me', protect, async (req, res) => {
 });
 
 module.exports = router;
+

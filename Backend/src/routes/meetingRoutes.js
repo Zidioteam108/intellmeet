@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
+const { body } = require('express-validator');
 const { protect } = require('../middleware/authMiddleware');
+const validateRequest = require('../middleware/validateRequest');
 const {
   createMeeting,
   getMeetings,
@@ -10,10 +12,17 @@ const {
   joinMeeting,
 } = require('../controllers/meetingController');
 
+const meetingValidation = [
+  body('title')
+    .trim()
+    .notEmpty().withMessage('Meeting title is required')
+    .isLength({ min: 3, max: 100 }).withMessage('Title must be 3-100 characters'),
+];
+
 router.use(protect);
 
 router.route('/')
-  .post(createMeeting)
+  .post(meetingValidation, validateRequest, createMeeting)
   .get(getMeetings);
 
 router.route('/:id')
