@@ -6,6 +6,7 @@ import { joinMeeting as joinMeetingApi } from '../api/meetingsApi';
 import useWebRTC from '../hooks/useWebRTC';
 import VideoTile from '../components/VideoTile';
 import ChatPanel from '../components/ChatPanel';
+import ParticipantList from '../components/ParticipantList';
 
 const VideoRoomPage = () => {
   const { roomId } = useParams<{ roomId: string }>();
@@ -14,6 +15,7 @@ const VideoRoomPage = () => {
 
   const [hasJoined, setHasJoined] = useState(false);
   const [showChat, setShowChat] = useState(false); // Default hide chat on mobile
+  const [participants, setParticipants] = useState<any[]>([]);
 
   // Initialize socket synchronously during render to avoid race conditions
   const socket = useMemo(() => {
@@ -26,10 +28,13 @@ const VideoRoomPage = () => {
     remoteStreams,
     isMuted,
     isCameraOff,
+    isScreenSharing,
     joinRoom,
     leaveRoom,
     toggleMute,
     toggleCamera,
+    startScreenShare,
+    stopScreenShare,
   } = useWebRTC(socket, roomId || '', user?.name || 'Guest');
 
   // On page load, join room
@@ -49,8 +54,18 @@ const VideoRoomPage = () => {
 
     join();
 
+    socket.on('user-joined', ({ socketId, userName }: any) => {
+      setParticipants((prev) => [...prev, { socketId, userName }]);
+    });
+
+    socket.on('user-left', ({ socketId }: any) => {
+      setParticipants((prev) => prev.filter((p) => p.socketId !== socketId));
+    });
+
     // When user navigates away, clean up
     return () => {
+      socket.off('user-joined');
+      socket.off('user-left');
       leaveRoom();
       disconnectSocket();
     };
@@ -94,6 +109,15 @@ const VideoRoomPage = () => {
               className="hidden sm:flex px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-[10px] font-bold uppercase tracking-widest rounded-lg shadow-lg shadow-indigo-600/20 transition-all"
             >
               🔗 Invite
+            </button>
+
+            <button
+              onClick={isScreenSharing ? stopScreenShare : startScreenShare}
+              className={`hidden sm:flex px-3 py-1.5 text-white text-[10px] font-bold uppercase tracking-widest rounded-lg shadow-lg transition-all ${
+                isScreenSharing ? 'bg-green-600 hover:bg-green-700 shadow-green-600/20' : 'bg-gray-600 hover:bg-gray-500 shadow-gray-600/20'
+              }`}
+            >
+              {isScreenSharing ? '🖥️ Stop Share' : '🖥️ Share Screen'}
             </button>
 
             <div className="flex bg-white/5 p-1 rounded-xl border border-white/5 gap-1">
@@ -178,17 +202,19 @@ const VideoRoomPage = () => {
         )}
       </div>
 
-      {/* ── Right side: Chat ─────────────────────────────────────── */}
-      {/* On mobile, chat is a full overlay. On desktop, it is a fixed side panel */}
+      {/* ── Right side: Chat & Participants ──────────────────────── */}
       {showChat && (
-        <div className="absolute inset-0 sm:relative sm:inset-auto z-40 w-full sm:w-96 flex-shrink-0 border-l border-white/5 bg-[#0a0a0c] sm:bg-[#121215]/50 backdrop-blur-3xl animate-in slide-in-from-right duration-500">
-          <ChatPanel
-            socket={socket}
-            roomId={roomId || ''}
-            currentUserId={user?.id || ''}
-            currentUserName={user?.name || 'Guest'}
-            onClose={() => setShowChat(false)}
-          />
+        <div className="absolute inset-0 sm:relative sm:inset-auto z-40 w-full sm:w-96 flex-shrink-0 border-l border-white/5 bg-[#0a0a0c] sm:bg-[#121215]/50 backdrop-blur-3xl animate-in slide-in-from-right duration-500 flex flex-col">
+          <div className="flex-1 overflow-hidden flex flex-col relative">
+            <ChatPanel
+              socket={socket}
+              roomId={roomId || ''}
+              currentUserId={user?.id || ''}
+              currentUserName={user?.name || 'Guest'}
+              onClose={() => setShowChat(false)}
+            />
+          </div>
+          <ParticipantList participants={participants} localUserName={user?.name || 'You'} />
         </div>
       )}
     </div>

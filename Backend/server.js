@@ -74,7 +74,11 @@ app.use('/api/auth', authRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/meetings', meetingRoutes);
 app.use('/api/chat', chatRoutes);
+const transcriptionRoutes = require('./src/routes/transcriptionRoutes');
+app.use('/api/transcription', transcriptionRoutes);
+
 // Socket.io logic
+
 socketHandler(io);
 
 // Error handling middleware
