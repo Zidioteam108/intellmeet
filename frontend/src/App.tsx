@@ -11,13 +11,8 @@ import ProtectedRoute from './components/ProtectedRoute'
 import DashboardLayout from './components/DashboardLayout'
 import VideoRoomPage from './pages/VideoRoomPage'
 
-// Placeholder pages for routes that will be built on upcoming days
-const TasksPage = () => (
-  <div className="p-8"><h1 className="text-3xl font-black text-slate-900 mb-4">Tasks</h1><p className="text-slate-500 font-medium">This module is coming soon in the next phase of development.</p></div>
-)
-const AnalyticsPage = () => (
-  <div className="p-8"><h1 className="text-3xl font-black text-slate-900 mb-4">Analytics</h1><p className="text-slate-500 font-medium">This module is coming soon in the next phase of development.</p></div>
-)
+import TasksPage from './pages/TasksPage'
+import AnalyticsPage from './pages/AnalyticsPage'
 
 import useAuthInit from './hooks/useAuthInit';
 import { useAuthStore } from './store/authStore';
