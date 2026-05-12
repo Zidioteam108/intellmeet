@@ -16,6 +16,7 @@ import {
   Zap
 } from 'lucide-react'
 import logo from '@/assets/logo.png'
+import NotificationBell from './NotificationBell'
 
 const navItems = [
   { label: 'Dashboard',  path: '/dashboard',  icon: LayoutDashboard },
@@ -162,10 +163,7 @@ const DashboardLayout = ({ children }: Props) => {
           </div>
 
           <div className="flex items-center gap-6">
-            <button className="relative p-3 rounded-2xl bg-white border border-slate-200 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition-all duration-300 shadow-sm">
-              <Bell className="w-5 h-5" />
-              <span className="absolute top-3 right-3 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"></span>
-            </button>
+            <NotificationBell />
             
             <button 
               onClick={() => navigate('/meetings')}

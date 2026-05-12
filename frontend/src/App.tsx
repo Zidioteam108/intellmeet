@@ -12,7 +12,7 @@ import DashboardLayout from './components/DashboardLayout'
 import VideoRoomPage from './pages/VideoRoomPage'
 import PostMeetingPage from './pages/PostMeetingPage'
 
-import TasksPage from './pages/TasksPage'
+import KanbanPage from './pages/KanbanPage'
 import AnalyticsPage from './pages/AnalyticsPage'
 
 import useAuthInit from './hooks/useAuthInit';
@@ -82,7 +82,7 @@ function App() {
           } />
           <Route path="/tasks" element={
             <ProtectedRoute>
-              <DashboardLayout><TasksPage /></DashboardLayout>
+              <DashboardLayout><KanbanPage /></DashboardLayout>
             </ProtectedRoute>
           } />
           <Route path="/analytics" element={
