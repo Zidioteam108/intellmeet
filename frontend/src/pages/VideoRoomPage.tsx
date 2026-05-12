@@ -2,7 +2,8 @@ import { useEffect, useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { connectSocket, disconnectSocket } from '../utils/socket';
-import { joinMeeting as joinMeetingApi } from '../api/meetingsApi';
+import { joinMeeting as joinMeetingApi, getAllMeetings } from '../api/meetingsApi';
+import { generateSummary } from '../api/summaryApi';
 import useWebRTC from '../hooks/useWebRTC';
 import VideoTile from '../components/VideoTile';
 import ChatPanel from '../components/ChatPanel';
@@ -16,6 +17,7 @@ const VideoRoomPage = () => {
   const [hasJoined, setHasJoined] = useState(false);
   const [showChat, setShowChat] = useState(false); // Default hide chat on mobile
   const [participants, setParticipants] = useState<any[]>([]);
+  const [meetingData, setMeetingData] = useState<any>(null);
 
   // Initialize socket synchronously during render to avoid race conditions
   const socket = useMemo(() => {
@@ -47,6 +49,10 @@ const VideoRoomPage = () => {
         await joinMeetingApi(roomId);
         await joinRoom();
         setHasJoined(true);
+
+        const meetings = await getAllMeetings();
+        const current = meetings.meetings.find((m: any) => m.roomId === roomId);
+        if (current) setMeetingData(current);
       } catch (err) {
         console.error('Failed to join meeting', err);
       }
@@ -71,9 +77,20 @@ const VideoRoomPage = () => {
     };
   }, [roomId, accessToken, socket, joinRoom, leaveRoom]);
 
-  const handleLeave = () => {
+  const handleLeave = async () => {
     leaveRoom();
-    navigate('/meetings');
+    
+    // If current user is the host, generate summary
+    if (meetingData?.host?._id === user?.id || meetingData?.host === user?.id) {
+      try {
+        await generateSummary(meetingData._id);
+        navigate(`/meeting/${meetingData._id}/summary`);
+      } catch {
+        navigate('/meetings');
+      }
+    } else {
+      navigate('/meetings');
+    }
   };
 
   return (
