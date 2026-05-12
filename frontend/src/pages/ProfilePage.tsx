@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuthStore } from '@/store/authStore'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Camera, Mail, User as UserIcon, Shield, Sparkles, CheckCircle2, ChevronRight, AlertCircle, LogOut } from 'lucide-react'
+import { updateProfile as updateProfileApi, uploadAvatar as uploadAvatarApi, getMyProfile as getMyProfileApi } from '../api/profileApi'
 
 const ProfilePage = () => {
   const { user, updateUser } = useAuthStore()
@@ -15,6 +16,22 @@ const ProfilePage = () => {
   const [isSaving, setIsSaving] = useState(false)
   const [successMsg, setSuccessMsg] = useState('')
   const [errorMsg, setErrorMsg] = useState('')
+
+  // Sync with latest profile on mount
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const data = await getMyProfileApi();
+        updateUser(data.user);
+        setName(data.user.name);
+        setBio(data.user.bio || '');
+        setAvatarPreview(data.user.avatar || '');
+      } catch (err) {
+        console.error('Failed to sync profile:', err);
+      }
+    };
+    fetchProfile();
+  }, []);
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -37,13 +54,36 @@ const ProfilePage = () => {
     }
 
     setIsSaving(true)
-    // Simulated API call - Logic will be on Day 9
-    setTimeout(() => {
-      console.log('Avatar file ready for upload:', avatarFile)
-      updateUser({ name: name.trim(), bio: bio.trim() })
+    
+    try {
+      let currentAvatar = user?.avatar || '';
+
+      // 1. If there's a new avatar file, upload it first
+      if (avatarFile) {
+        const uploadRes = await uploadAvatarApi(avatarFile);
+        currentAvatar = uploadRes.avatar;
+      }
+
+      // 2. Update name and bio
+      const updateRes = await updateProfileApi({ 
+        name: name.trim(), 
+        bio: bio.trim() 
+      });
+
+      // 3. Update global state with everything
+      updateUser({ 
+        ...updateRes.user,
+        avatar: currentAvatar // Ensure we use the latest avatar URL
+      });
+
       setSuccessMsg('Profile settings updated successfully.')
+      setAvatarFile(null); // Clear the file after successful upload
+    } catch (err: any) {
+      console.error('Failed to update profile:', err);
+      setErrorMsg(err.response?.data?.message || 'Failed to update profile. Please try again.');
+    } finally {
       setIsSaving(false)
-    }, 1000)
+    }
   }
 
   return (
