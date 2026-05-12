@@ -130,6 +130,12 @@ const MeetingsPage = () => {
                     {meeting.status}
                   </span>
                   <button 
+                    onClick={() => navigate(`/meeting/${meeting._id}/summary`)}
+                    className="flex-1 sm:flex-none bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-black uppercase tracking-widest px-4 py-4 rounded-2xl transition-all active:scale-95"
+                  >
+                    View Summary
+                  </button>
+                  <button 
                     onClick={() => navigate(`/room/${meeting.roomId}`)}
                     className="flex-1 sm:flex-none bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black uppercase tracking-widest px-8 py-4 rounded-2xl shadow-xl shadow-indigo-600/20 active:scale-95 transition-all"
                   >

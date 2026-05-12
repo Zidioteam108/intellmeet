@@ -76,6 +76,8 @@ app.use('/api/meetings', meetingRoutes);
 app.use('/api/chat', chatRoutes);
 const transcriptionRoutes = require('./src/routes/transcriptionRoutes');
 app.use('/api/transcription', transcriptionRoutes);
+const summaryRoutes = require('./src/routes/summaryRoutes');
+app.use('/api/summary', summaryRoutes);
 
 // Socket.io logic
 

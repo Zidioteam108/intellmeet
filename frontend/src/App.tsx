@@ -10,6 +10,7 @@ import MeetingsPage from './pages/MeetingsPage'
 import ProtectedRoute from './components/ProtectedRoute'
 import DashboardLayout from './components/DashboardLayout'
 import VideoRoomPage from './pages/VideoRoomPage'
+import PostMeetingPage from './pages/PostMeetingPage'
 
 import TasksPage from './pages/TasksPage'
 import AnalyticsPage from './pages/AnalyticsPage'
@@ -92,6 +93,11 @@ function App() {
           <Route path="/room/:roomId" element={
             <ProtectedRoute>
               <VideoRoomPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/meeting/:meetingId/summary" element={
+            <ProtectedRoute>
+              <DashboardLayout><PostMeetingPage /></DashboardLayout>
             </ProtectedRoute>
           } />
 

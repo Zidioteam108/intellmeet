@@ -48,6 +48,29 @@ const meetingSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+    summary: {
+      type: String,
+      default: null,
+    },
+    actionItems: [
+      {
+        task: String,
+        assignee: String,
+        priority: {
+          type: String,
+          enum: ['low', 'medium', 'high'],
+          default: 'medium',
+        },
+        completed: {
+          type: Boolean,
+          default: false,
+        },
+        createdAt: {
+          type: Date,
+          default: Date.now,
+        },
+      },
+    ],
   },
   { timestamps: true }
 );
