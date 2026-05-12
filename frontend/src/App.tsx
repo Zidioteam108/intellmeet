@@ -57,7 +57,7 @@ function App() {
     <>
       <Preloader isLoading={isPreloading} />
       
-      <div className={`transition-all duration-1000 ${isPreloading ? 'opacity-0 translate-y-4 scale-95 blur-sm' : 'opacity-100 translate-y-0 scale-100 blur-0'}`}>
+      <div className={`transition-opacity duration-1000 ${isPreloading ? 'opacity-0' : 'opacity-100'}`}>
         <Routes>
           {/* Public routes */}
           <Route path="/" element={<LandingPage />} />
