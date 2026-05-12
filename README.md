@@ -2,9 +2,19 @@
 
 ![IntellMeet Banner](frontend/src/assets/logo.png)
 
+> 🌐 **Live Demo:** [https://intellmeet.vercel.app](https://intellmeet.vercel.app)  
+> 🎬 **Demo Video:** *(Upload to YouTube/Loom and paste link here)*  
+> 📧 **Demo Credentials:** `demo@intellmeet.com` / `Demo1234!`
+
 ## 📌 Overview
 
 IntellMeet is a full-stack, AI-powered enterprise meeting platform built for real-time collaboration. It enables teams to conduct video meetings, automatically transcribe conversations using OpenAI Whisper, generate intelligent summaries with GPT-4o-mini, manage tasks on a Kanban board, and track productivity through a live analytics dashboard — all in one platform.
+
+### 📊 Lighthouse Scores
+
+| Performance | Accessibility | Best Practices | SEO |
+|---|---|---|---|
+| ~74 | ~85 | 92 | ~83 |
 
 ---
 
