@@ -14,6 +14,7 @@ interface RemoteStream {
   stream: MediaStream;
   userName: string;
   avatar?: string;
+  isCameraOff?: boolean;
 }
 
 const useWebRTC = (socket: Socket | null, roomId: string, userName: string, avatar: string = '') => {
@@ -159,12 +160,21 @@ const useWebRTC = (socket: Socket | null, roomId: string, userName: string, avat
       setRemoteStreams((prev) => prev.filter((r) => r.socketId !== socketId));
     };
 
+    const handleCameraToggle = ({ socketId, isCameraOff }: any) => {
+      setRemoteStreams((prev) =>
+        prev.map((r) =>
+          r.socketId === socketId ? { ...r, isCameraOff } : r
+        )
+      );
+    };
+
     // Attach event listeners
     socket.on('user-joined', handleUserJoined);
     socket.on('offer', handleOffer);
     socket.on('answer', handleAnswer);
     socket.on('ice-candidate', handleIceCandidate);
     socket.on('user-left', handleUserLeft);
+    socket.on('user-camera-toggle', handleCameraToggle);
 
     return () => {
       // Remove listeners when component unmounts
@@ -173,6 +183,7 @@ const useWebRTC = (socket: Socket | null, roomId: string, userName: string, avat
       socket.off('answer', handleAnswer);
       socket.off('ice-candidate', handleIceCandidate);
       socket.off('user-left', handleUserLeft);
+      socket.off('user-camera-toggle', handleCameraToggle);
     };
   }, [socket, roomId, createPeerConnection]);
 
@@ -213,8 +224,14 @@ const useWebRTC = (socket: Socket | null, roomId: string, userName: string, avat
       track.enabled = !track.enabled;
     });
 
-    setIsCameraOff((prev) => !prev);
-  }, []);
+    setIsCameraOff((prev) => {
+      const newState = !prev;
+      if (socket) {
+        socket.emit('toggle-camera', { roomId, isCameraOff: newState });
+      }
+      return newState;
+    });
+  }, [socket, roomId]);
 
   // ─────────────────────────────────────────────────────────────────────────
   // Step G — Leave room and clean up

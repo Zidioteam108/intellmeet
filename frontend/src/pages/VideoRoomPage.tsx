@@ -115,19 +115,19 @@ const VideoRoomPage = () => {
       socket.emit('end-meeting', { roomId });
     }
 
-    leaveRoom();
+    // Small delay to ensure the 'end-meeting' socket event is sent before we disconnect
+    setTimeout(() => {
+      leaveRoom();
 
-    // Generate AI summary if meeting data exists
-    if (meetingData?._id) {
-      try {
-        await generateSummary(meetingData._id);
-        navigate(`/meeting/${meetingData._id}/summary`);
-      } catch {
+      // Generate AI summary if meeting data exists
+      if (meetingData?._id) {
+        generateSummary(meetingData._id)
+          .then(() => navigate(`/meeting/${meetingData._id}/summary`))
+          .catch(() => navigate('/meetings'));
+      } else {
         navigate('/meetings');
       }
-    } else {
-      navigate('/meetings');
-    }
+    }, 500);
   };
 
   const handlePin = (socketId: string) => {
@@ -276,6 +276,7 @@ const VideoRoomPage = () => {
                 isPinned={pinnedId === remote.socketId}
                 onPin={() => handlePin(remote.socketId)}
                 avatar={remote.avatar}
+                isCameraOff={remote.isCameraOff}
               />
             ))}
           </div>

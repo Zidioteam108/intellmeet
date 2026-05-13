@@ -114,6 +114,11 @@ const socketHandler = (io) => {
       socket.to(roomId).emit('user-audio-toggle', { socketId: socket.id, isMuted });
     });
 
+    // ── Camera On/Off Status ───────────────────────────────────────────
+    socket.on('toggle-camera', ({ roomId, isCameraOff }) => {
+      socket.to(roomId).emit('user-camera-toggle', { socketId: socket.id, isCameraOff });
+    });
+
     // ── End Meeting (Host Only) ─────────────────────────────────────────
     socket.on('end-meeting', ({ roomId }) => {
       console.log(`🛑 Meeting ended by host in room: ${roomId}`);
