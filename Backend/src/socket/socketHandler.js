@@ -39,7 +39,7 @@ const socketHandler = (io) => {
     });
 
     // ── Join Room ──────────────────────────────────────────────────────
-    socket.on('join-room', ({ roomId, userId, userName, avatar }) => {
+    socket.on('join-room', ({ roomId, userId, userName, avatar, isCameraOff }) => {
       socket.join(roomId);
 
       if (!rooms.has(roomId)) {
@@ -55,6 +55,7 @@ const socketHandler = (io) => {
         userId,
         userName,
         avatar,
+        isCameraOff,
       });
 
       // Tell the new user how many people are already in the room
@@ -63,8 +64,8 @@ const socketHandler = (io) => {
     });
 
     // ── WebRTC Offer ───────────────────────────────────────────────────
-    socket.on('offer', ({ to, offer }) => {
-      io.to(to).emit('offer', { from: socket.id, offer });
+    socket.on('offer', ({ to, offer, userName, avatar, isCameraOff }) => {
+      io.to(to).emit('offer', { from: socket.id, offer, userName, avatar, isCameraOff });
     });
 
     // ── WebRTC Answer ──────────────────────────────────────────────────
