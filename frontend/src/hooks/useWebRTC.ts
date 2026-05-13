@@ -13,9 +13,10 @@ interface RemoteStream {
   socketId: string;
   stream: MediaStream;
   userName: string;
+  avatar?: string;
 }
 
-const useWebRTC = (socket: Socket | null, roomId: string, userName: string) => {
+const useWebRTC = (socket: Socket | null, roomId: string, userName: string, avatar: string = '') => {
   // Local camera and mic stream
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
 
@@ -65,7 +66,7 @@ const useWebRTC = (socket: Socket | null, roomId: string, userName: string) => {
   // ─────────────────────────────────────────────────────────────────────────
   // Step B — Create a peer connection for a specific remote user
   // ─────────────────────────────────────────────────────────────────────────
-  const createPeerConnection = useCallback((remoteSocketId: string, remoteUserName: string) => {
+  const createPeerConnection = useCallback((remoteSocketId: string, remoteUserName: string, remoteAvatar: string = '') => {
     const pc = new RTCPeerConnection(ICE_SERVERS);
 
     // When ICE candidates are found, send to remote user via socket
@@ -84,7 +85,7 @@ const useWebRTC = (socket: Socket | null, roomId: string, userName: string) => {
       setRemoteStreams((prev) => {
         const exists = prev.find((r) => r.socketId === remoteSocketId);
         if (exists) return prev;
-        return [...prev, { socketId: remoteSocketId, stream, userName: remoteUserName }];
+        return [...prev, { socketId: remoteSocketId, stream, userName: remoteUserName, avatar: remoteAvatar }];
       });
     };
 
@@ -107,10 +108,10 @@ const useWebRTC = (socket: Socket | null, roomId: string, userName: string) => {
     if (!socket || !roomId) return;
 
     // When a NEW user joins the room, we (the existing user) create an offer
-    const handleUserJoined = async ({ socketId, userName: remoteUserName }: any) => {
+    const handleUserJoined = async ({ socketId, userName: remoteUserName, avatar: remoteAvatar }: any) => {
       console.log('User joined:', remoteUserName, socketId);
 
-      const pc = createPeerConnection(socketId, remoteUserName);
+      const pc = createPeerConnection(socketId, remoteUserName, remoteAvatar);
 
       // Create an offer
       const offer = await pc.createOffer();
@@ -183,9 +184,9 @@ const useWebRTC = (socket: Socket | null, roomId: string, userName: string) => {
     if (!stream) return;
 
     if (socket) {
-      socket.emit('join-room', { roomId, userName });
+      socket.emit('join-room', { roomId, userName, avatar });
     }
-  }, [socket, roomId, userName, startLocalStream]);
+  }, [socket, roomId, userName, avatar, startLocalStream]);
 
   // ─────────────────────────────────────────────────────────────────────────
   // Step E — Mute/unmute audio

@@ -41,7 +41,7 @@ const VideoRoomPage = () => {
     toggleCamera,
     startScreenShare,
     stopScreenShare,
-  } = useWebRTC(socket, roomId || '', user?.name || 'Guest');
+  } = useWebRTC(socket, roomId || '', user?.name || 'Guest', user?.avatar || '');
 
   // On page load, join room
   useEffect(() => {
@@ -63,8 +63,8 @@ const VideoRoomPage = () => {
 
     join();
 
-    socket.on('user-joined', ({ socketId, userName }: any) => {
-      setParticipants((prev) => [...prev, { socketId, userName }]);
+    socket.on('user-joined', ({ socketId, userName, avatar }: any) => {
+      setParticipants((prev) => [...prev, { socketId, userName, avatar }]);
     });
 
     socket.on('user-left', ({ socketId }: any) => {
@@ -252,6 +252,7 @@ const VideoRoomPage = () => {
               isScreenShare={isScreenSharing}
               isPinned={pinnedId === 'local'}
               onPin={() => handlePin('local')}
+              avatar={user?.avatar}
             />
 
             {/* Remote videos (other participants) */}
@@ -262,6 +263,7 @@ const VideoRoomPage = () => {
                 label={remote.userName}
                 isPinned={pinnedId === remote.socketId}
                 onPin={() => handlePin(remote.socketId)}
+                avatar={remote.avatar}
               />
             ))}
           </div>

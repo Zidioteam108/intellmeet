@@ -8,9 +8,10 @@ interface Props {
   isScreenShare?: boolean;
   onPin?: () => void;
   isPinned?: boolean;
+  avatar?: string;
 }
 
-const VideoTile = ({ stream, label, isMuted = false, isCameraOff = false, isScreenShare = false, onPin, isPinned = false }: Props) => {
+const VideoTile = ({ stream, label, isMuted = false, isCameraOff = false, isScreenShare = false, onPin, isPinned = false, avatar }: Props) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -57,9 +58,35 @@ const VideoTile = ({ stream, label, isMuted = false, isCameraOff = false, isScre
       } ${isFullscreen ? 'bg-black' : 'bg-slate-900'}`}
     >
       {isCameraOff || !stream ? (
-        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-800 to-slate-950">
-          <div className="w-24 h-24 rounded-full bg-slate-800/80 backdrop-blur-xl flex items-center justify-center text-4xl text-white shadow-[inset_0_2px_20px_rgba(255,255,255,0.05)] border border-white/5 group-hover:scale-105 transition-transform duration-500">
-            👤
+        <div className="w-full h-full flex flex-col items-center justify-center relative overflow-hidden bg-slate-950">
+          {/* Soft blurred background */}
+          {avatar && (
+            <div 
+              className="absolute inset-0 bg-cover bg-center opacity-20 blur-[60px] scale-125"
+              style={{ backgroundImage: `url(${avatar})` }}
+            />
+          )}
+          
+          <div className="relative z-10 flex flex-col items-center">
+            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full border-[3px] border-white/20 shadow-2xl overflow-hidden bg-slate-800/80 backdrop-blur-xl flex items-center justify-center group-hover:scale-105 transition-transform duration-500">
+              {avatar ? (
+                <img src={avatar} alt={label} className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-3xl font-black">
+                  {label.charAt(0).toUpperCase()}
+                </div>
+              )}
+            </div>
+            {/* Minimal Name below avatar (if pinned, we can show it larger) */}
+            <p className="mt-4 text-white/90 font-black text-[10px] sm:text-xs tracking-[0.2em] uppercase">
+              {label}
+            </p>
+          </div>
+
+          {/* Camera-off badge */}
+          <div className="absolute top-4 right-4 bg-slate-900/60 backdrop-blur-xl px-2.5 py-1.5 rounded-lg border border-white/5 flex items-center gap-2">
+            <div className="w-1.5 h-1.5 bg-slate-400 rounded-full"></div>
+            <span className="text-[8px] font-black text-slate-300 uppercase tracking-widest">Video Off</span>
           </div>
         </div>
       ) : (

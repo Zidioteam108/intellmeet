@@ -39,7 +39,7 @@ const socketHandler = (io) => {
     });
 
     // ── Join Room ──────────────────────────────────────────────────────
-    socket.on('join-room', ({ roomId, userId, userName }) => {
+    socket.on('join-room', ({ roomId, userId, userName, avatar }) => {
       socket.join(roomId);
 
       if (!rooms.has(roomId)) {
@@ -54,6 +54,7 @@ const socketHandler = (io) => {
         socketId: socket.id,
         userId,
         userName,
+        avatar,
       });
 
       // Tell the new user how many people are already in the room
