@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import api from '@/lib/api'
 import { useAuthStore } from '@/store/authStore'
 import { Button } from '@/components/ui/button'
@@ -15,6 +15,7 @@ const LoginPage = () => {
   const [password, setPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
+  const location = useLocation()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -34,7 +35,10 @@ const LoginPage = () => {
 
       const { user, accessToken } = response.data
       setAuth(user, accessToken)
-      navigate('/dashboard')
+      
+      const searchParams = new URLSearchParams(location.search)
+      const returnUrl = searchParams.get('returnUrl') || '/dashboard'
+      navigate(returnUrl)
     } catch (err: any) {
       setError(err.response?.data?.message || 'Login failed. Please check your credentials.')
     } finally {

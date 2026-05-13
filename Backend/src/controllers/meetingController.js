@@ -109,6 +109,14 @@ const joinMeeting = async (req, res) => {
     });
   }
 
+  // Check if meeting is already ended
+  if (meeting.status === 'ended') {
+    return res.status(403).json({
+      success: false,
+      message: 'This meeting has ended.',
+    });
+  }
+
   // Check if user is already in participants list
   const alreadyJoined = meeting.participants.some(
     (p) => p._id.toString() === req.user._id.toString()
@@ -158,6 +166,30 @@ const deleteMeeting = async (req, res) => {
   });
 };
 
+const endMeeting = async (req, res) => {
+  const { roomId } = req.params;
+
+  const meeting = await Meeting.findOne({ roomId });
+
+  if (!meeting) {
+    return res.status(404).json({ success: false, message: 'Meeting not found' });
+  }
+
+  if (meeting.host.toString() !== req.user._id.toString()) {
+    return res.status(403).json({ success: false, message: 'Only host can end meeting' });
+  }
+
+  meeting.status = 'ended';
+  meeting.endedAt = new Date();
+  await meeting.save();
+
+  res.status(200).json({
+    success: true,
+    message: 'Meeting ended successfully',
+    meeting,
+  });
+};
+
 module.exports = {
   createMeeting,
   getMeetings,
@@ -165,4 +197,5 @@ module.exports = {
   updateMeeting,
   deleteMeeting,
   joinMeeting,
+  endMeeting,
 };

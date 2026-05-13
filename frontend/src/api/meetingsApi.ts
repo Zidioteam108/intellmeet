@@ -21,3 +21,8 @@ export const joinMeeting = async (roomId: string) => {
   const res = await api.get(`/meetings/join/${roomId}`);
   return res.data;
 };
+
+export const endMeeting = async (roomId: string) => {
+  const res = await api.post(`/meetings/end/${roomId}`);
+  return res.data;
+};

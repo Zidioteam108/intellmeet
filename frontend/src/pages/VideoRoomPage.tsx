@@ -2,7 +2,7 @@ import { useEffect, useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { connectSocket, disconnectSocket } from '../utils/socket';
-import { joinMeeting as joinMeetingApi, getAllMeetings } from '../api/meetingsApi';
+import { joinMeeting as joinMeetingApi, getAllMeetings, endMeeting as endMeetingApi } from '../api/meetingsApi';
 import { generateSummary } from '../api/summaryApi';
 import useWebRTC from '../hooks/useWebRTC';
 import VideoTile from '../components/VideoTile';
@@ -56,8 +56,10 @@ const VideoRoomPage = () => {
         const meetings = await getAllMeetings();
         const current = meetings.meetings.find((m: any) => m.roomId === roomId);
         if (current) setMeetingData(current);
-      } catch (err) {
+      } catch (err: any) {
         console.error('Failed to join meeting', err);
+        alert(err.response?.data?.message || 'Failed to join meeting. It may have ended.');
+        navigate('/meetings');
       }
     };
 
@@ -75,6 +77,7 @@ const VideoRoomPage = () => {
 
     // Listen for host ending the meeting
     socket.on('meeting-ended', () => {
+      alert('Meeting ended by host.');
       leaveRoom();
       navigate('/meetings');
     });
@@ -97,6 +100,15 @@ const VideoRoomPage = () => {
   // Host-only: End the call for everyone
   const handleEndCall = async () => {
     if (!isHost) return;
+
+    try {
+      // Call backend to update meeting status to 'ended'
+      if (roomId) {
+        await endMeetingApi(roomId);
+      }
+    } catch (err) {
+      console.error('Failed to end meeting on backend', err);
+    }
 
     // Notify all participants
     if (socket && roomId) {
