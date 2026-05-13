@@ -16,7 +16,6 @@ const VideoRoomPage = () => {
 
   const [hasJoined, setHasJoined] = useState(false);
   const [showChat, setShowChat] = useState(false);
-  const [participants, setParticipants] = useState<any[]>([]);
   const [meetingData, setMeetingData] = useState<any>(null);
   const [pinnedId, setPinnedId] = useState<string | null>(null);
 
@@ -65,12 +64,7 @@ const VideoRoomPage = () => {
 
     join();
 
-    socket.on('user-joined', ({ socketId, userName, avatar }: any) => {
-      setParticipants((prev) => [...prev, { socketId, userName, avatar }]);
-    });
-
     socket.on('user-left', ({ socketId }: any) => {
-      setParticipants((prev) => prev.filter((p) => p.socketId !== socketId));
       // If pinned user left, unpin
       setPinnedId((prev) => prev === socketId ? null : prev);
     });
@@ -83,7 +77,6 @@ const VideoRoomPage = () => {
     });
 
     return () => {
-      socket.off('user-joined');
       socket.off('user-left');
       socket.off('meeting-ended');
       leaveRoom();
@@ -308,7 +301,7 @@ const VideoRoomPage = () => {
               onClose={() => setShowChat(false)}
             />
           </div>
-          <ParticipantList participants={participants} localUserName={user?.name || 'You'} />
+          <ParticipantList participants={remoteStreams} localUserName={user?.name || 'You'} localAvatar={user?.avatar} />
         </div>
       )}
     </div>
