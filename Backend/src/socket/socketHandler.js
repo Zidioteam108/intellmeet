@@ -113,6 +113,12 @@ const socketHandler = (io) => {
       socket.to(roomId).emit('user-audio-toggle', { socketId: socket.id, isMuted });
     });
 
+    // ── End Meeting (Host Only) ─────────────────────────────────────────
+    socket.on('end-meeting', ({ roomId }) => {
+      console.log(`🛑 Meeting ended by host in room: ${roomId}`);
+      socket.to(roomId).emit('meeting-ended', { endedBy: socket.user?.name });
+    });
+
     // ── Disconnect ─────────────────────────────────────────────────────
     socket.on('disconnecting', () => {
       socket.rooms.forEach((roomId) => {

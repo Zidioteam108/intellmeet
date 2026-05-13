@@ -15,11 +15,15 @@ const VideoRoomPage = () => {
   const { user, accessToken } = useAuthStore();
 
   const [hasJoined, setHasJoined] = useState(false);
-  const [showChat, setShowChat] = useState(false); // Default hide chat on mobile
+  const [showChat, setShowChat] = useState(false);
   const [participants, setParticipants] = useState<any[]>([]);
   const [meetingData, setMeetingData] = useState<any>(null);
+  const [pinnedId, setPinnedId] = useState<string | null>(null);
 
-  // Initialize socket synchronously during render to avoid race conditions
+  // Is the current user the host of this meeting?
+  const isHost = meetingData?.host?._id === user?.id || meetingData?.host === user?.id;
+
+  // Initialize socket
   const socket = useMemo(() => {
     if (accessToken) return connectSocket(accessToken);
     return null;
@@ -45,7 +49,6 @@ const VideoRoomPage = () => {
 
     const join = async () => {
       try {
-        // Register join in backend to mark meeting active
         await joinMeetingApi(roomId);
         await joinRoom();
         setHasJoined(true);
@@ -66,22 +69,44 @@ const VideoRoomPage = () => {
 
     socket.on('user-left', ({ socketId }: any) => {
       setParticipants((prev) => prev.filter((p) => p.socketId !== socketId));
+      // If pinned user left, unpin
+      setPinnedId((prev) => prev === socketId ? null : prev);
     });
 
-    // When user navigates away, clean up
+    // Listen for host ending the meeting
+    socket.on('meeting-ended', () => {
+      leaveRoom();
+      navigate('/meetings');
+    });
+
     return () => {
       socket.off('user-joined');
       socket.off('user-left');
+      socket.off('meeting-ended');
       leaveRoom();
       disconnectSocket();
     };
-  }, [roomId, accessToken, socket, joinRoom, leaveRoom]);
+  }, [roomId, accessToken, socket, joinRoom, leaveRoom, navigate]);
 
+  // Host leaves → generate summary + navigate
   const handleLeave = async () => {
     leaveRoom();
-    
-    // If current user is the host, generate summary
-    if (meetingData?.host?._id === user?.id || meetingData?.host === user?.id) {
+    navigate('/meetings');
+  };
+
+  // Host-only: End the call for everyone
+  const handleEndCall = async () => {
+    if (!isHost) return;
+
+    // Notify all participants
+    if (socket && roomId) {
+      socket.emit('end-meeting', { roomId });
+    }
+
+    leaveRoom();
+
+    // Generate AI summary if meeting data exists
+    if (meetingData?._id) {
       try {
         await generateSummary(meetingData._id);
         navigate(`/meeting/${meetingData._id}/summary`);
@@ -92,6 +117,17 @@ const VideoRoomPage = () => {
       navigate('/meetings');
     }
   };
+
+  const handlePin = (socketId: string) => {
+    setPinnedId((prev) => (prev === socketId ? null : socketId));
+  };
+
+  // Reorder streams: pinned first
+  const orderedRemoteStreams = [...remoteStreams].sort((a, b) => {
+    if (a.socketId === pinnedId) return -1;
+    if (b.socketId === pinnedId) return 1;
+    return 0;
+  });
 
   return (
     <div className="flex h-screen bg-[#0a0a0c] overflow-hidden font-sans selection:bg-blue-500/30">
@@ -116,7 +152,8 @@ const VideoRoomPage = () => {
             </div>
           </div>
 
-          <div className="flex items-center gap-2 sm:gap-4">
+          <div className="flex items-center gap-2 sm:gap-3">
+            {/* Copy invite link */}
             <button
               onClick={() => {
                 const url = window.location.href;
@@ -128,8 +165,10 @@ const VideoRoomPage = () => {
               🔗 Invite
             </button>
 
+            {/* Screen share */}
             <button
               onClick={isScreenSharing ? stopScreenShare : startScreenShare}
+              aria-label={isScreenSharing ? 'Stop screen sharing' : 'Start screen sharing'}
               className={`hidden sm:flex px-3 py-1.5 text-white text-[10px] font-bold uppercase tracking-widest rounded-lg shadow-lg transition-all ${
                 isScreenSharing ? 'bg-green-600 hover:bg-green-700 shadow-green-600/20' : 'bg-gray-600 hover:bg-gray-500 shadow-gray-600/20'
               }`}
@@ -137,6 +176,7 @@ const VideoRoomPage = () => {
               {isScreenSharing ? '🖥️ Stop Share' : '🖥️ Share Screen'}
             </button>
 
+            {/* Audio/Video/Chat toggles */}
             <div className="flex bg-white/5 p-1 rounded-xl border border-white/5 gap-1">
               <button
                 onClick={toggleMute}
@@ -169,20 +209,34 @@ const VideoRoomPage = () => {
                 💬
               </button>
             </div>
-            
+
+            {/* Leave button — available to everyone */}
             <button
               onClick={handleLeave}
-              className="h-9 sm:h-10 px-3 sm:px-6 bg-red-600 hover:bg-red-700 text-white text-[10px] sm:text-xs font-black uppercase tracking-widest rounded-xl transition-all duration-300 shadow-lg shadow-red-600/20 border border-red-500/30"
+              className="h-9 sm:h-10 px-3 sm:px-5 bg-slate-700 hover:bg-slate-600 text-white text-[10px] sm:text-xs font-black uppercase tracking-widest rounded-xl transition-all duration-300 shadow-lg border border-slate-600/30"
             >
               Leave
             </button>
+
+            {/* End Call — HOST ONLY */}
+            {isHost && (
+              <button
+                onClick={handleEndCall}
+                className="h-9 sm:h-10 px-3 sm:px-5 bg-red-600 hover:bg-red-700 text-white text-[10px] sm:text-xs font-black uppercase tracking-widest rounded-xl transition-all duration-300 shadow-lg shadow-red-600/20 border border-red-500/30 animate-in fade-in duration-500"
+                title="End call for everyone and generate AI summary"
+              >
+                🔴 End Call
+              </button>
+            )}
           </div>
         </div>
 
         {/* Video Grid */}
-        <div className="flex-1 p-6 flex items-center justify-center overflow-y-auto">
+        <div className="flex-1 p-4 sm:p-6 flex items-center justify-center overflow-y-auto">
           <div className={`grid gap-4 sm:gap-6 w-full h-full max-w-6xl mx-auto ${
-            remoteStreams.length === 0
+            pinnedId
+              ? 'grid-cols-1 md:grid-cols-3 auto-rows-auto'
+              : remoteStreams.length === 0
               ? 'max-w-3xl grid-cols-1'
               : remoteStreams.length === 1
               ? 'grid-cols-1 md:grid-cols-2'
@@ -195,14 +249,19 @@ const VideoRoomPage = () => {
               label={`${user?.name || 'You'} (You)`}
               isMuted={true}
               isCameraOff={isCameraOff}
+              isScreenShare={isScreenSharing}
+              isPinned={pinnedId === 'local'}
+              onPin={() => handlePin('local')}
             />
 
             {/* Remote videos (other participants) */}
-            {remoteStreams.map((remote) => (
+            {orderedRemoteStreams.map((remote) => (
               <VideoTile
                 key={remote.socketId}
                 stream={remote.stream}
                 label={remote.userName}
+                isPinned={pinnedId === remote.socketId}
+                onPin={() => handlePin(remote.socketId)}
               />
             ))}
           </div>

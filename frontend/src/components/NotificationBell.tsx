@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { getSocket } from '../utils/socket';
 import { useAuthStore } from '../store/authStore';
 
@@ -13,6 +13,7 @@ const NotificationBell = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const { user } = useAuthStore();
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const socket = getSocket();
@@ -30,13 +31,27 @@ const NotificationBell = () => {
     };
   }, [user]);
 
+  // Click outside to close dropdown
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isOpen]);
+
   const unread = notifications.length;
 
   return (
-    <div className="relative">
+    <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="relative p-2 hover:bg-slate-100 rounded-lg transition-colors"
+        aria-label="Notifications"
       >
         🔔
         {unread > 0 && (
@@ -47,7 +62,7 @@ const NotificationBell = () => {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 top-12 w-80 bg-white border border-slate-200 shadow-2xl rounded-2xl z-50 overflow-hidden">
+        <div className="absolute right-0 top-12 w-80 bg-white border border-slate-200 shadow-2xl rounded-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
           <div className="flex items-center justify-between p-4 border-b border-slate-100 bg-slate-50/50">
             <span className="font-bold text-sm text-slate-800">Notifications</span>
             <button

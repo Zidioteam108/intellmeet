@@ -16,6 +16,16 @@ IntellMeet is a full-stack, AI-powered enterprise meeting platform built for rea
 |---|---|---|---|
 | ~74 | ~85 | 92 | ~83 |
 
+### 📸 Screenshots
+
+| Landing Page | Login |
+|---|---|
+| ![Landing](screenshots/landing_page.png) | ![Login](screenshots/login_page.png) |
+
+| Signup | Dashboard |
+|---|---|
+| ![Signup](screenshots/signup_page.png) | ![Dashboard](screenshots/dashboard.png) |
+
 ---
 
 ## ✨ Features
