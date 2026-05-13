@@ -2,7 +2,7 @@
 
 ![IntellMeet Banner](frontend/src/assets/logo.png)
 
-> 🌐 **Live Demo:** [https://intellmeet.vercel.app](https://intellmeet.vercel.app)  
+> 🌐 **Live Demo:** [https://intellmeet-six.vercel.app](https://intellmeet-six.vercel.app)  
 > 🎬 **Demo Video:** *(Upload to YouTube/Loom and paste link here)*  
 > 📧 **Demo Credentials:** `demo@intellmeet.com` / `Demo1234!`
 
