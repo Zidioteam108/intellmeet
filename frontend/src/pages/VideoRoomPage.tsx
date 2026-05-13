@@ -1,15 +1,22 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { connectSocket, disconnectSocket } from '../utils/socket';
-import { joinMeeting as joinMeetingApi, getAllMeetings, endMeeting as endMeetingApi } from '../api/meetingsApi';
+import { getAllMeetings, endMeeting as endMeetingApi } from '../api/meetingsApi';
 import { generateSummary } from '../api/summaryApi';
 import useWebRTC from '../hooks/useWebRTC';
 import VideoTile from '../components/VideoTile';
 import ChatPanel from '../components/ChatPanel';
 import ParticipantList from '../components/ParticipantList';
 
-const VideoRoomPage = () => {
+interface Props {
+  /** Stream already acquired in PreJoinPage — avoids restarting camera */
+  initialStream?: MediaStream | null;
+  initialCameraOff?: boolean;
+  initialMuted?: boolean;
+}
+
+const VideoRoomPage = ({ initialStream, initialCameraOff = false, initialMuted = false }: Props) => {
   const { roomId } = useParams<{ roomId: string }>();
   const navigate = useNavigate();
   const { user, accessToken } = useAuthStore();
@@ -18,6 +25,11 @@ const VideoRoomPage = () => {
   const [showChat, setShowChat] = useState(false);
   const [meetingData, setMeetingData] = useState<any>(null);
   const [pinnedId, setPinnedId] = useState<string | null>(null);
+
+  // Full-screen "meeting ended" overlay state
+  const [meetingEndedOverlay, setMeetingEndedOverlay] = useState(false);
+  const [countdown, setCountdown] = useState(4);
+  const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Is the current user the host of this meeting?
   const isHost = meetingData?.host?._id === user?.id || meetingData?.host === user?.id;
@@ -40,15 +52,16 @@ const VideoRoomPage = () => {
     toggleCamera,
     startScreenShare,
     stopScreenShare,
-  } = useWebRTC(socket, roomId || '', user?.name || 'Guest', user?.avatar || '');
+  } = useWebRTC(socket, roomId || '', user?.name || 'Guest', user?.avatar || '', initialStream, initialCameraOff, initialMuted);
 
-  // On page load, join room
+  // ─── On page load, join room ─────────────────────────────────────────────
   useEffect(() => {
     if (!accessToken || !roomId || !socket) return;
 
     const join = async () => {
       try {
-        await joinMeetingApi(roomId);
+        // If PreJoinPage already called joinMeetingApi, skip the API call —
+        // just fetch meeting data and connect socket
         await joinRoom();
         setHasJoined(true);
 
@@ -56,63 +69,76 @@ const VideoRoomPage = () => {
         const current = meetings.meetings.find((m: any) => m.roomId === roomId);
         if (current) setMeetingData(current);
       } catch (err: any) {
-        console.error('Failed to join meeting', err);
-        alert(err.response?.data?.message || 'Failed to join meeting. It may have ended.');
-        navigate('/meetings');
+        const reason = err.response?.data?.reason;
+        const meetId = err.response?.data?.meetingId;
+        if (reason === 'ended') {
+          navigate(`/meeting-error?reason=ended${meetId ? `&meetingId=${meetId}` : ''}`);
+        } else if (reason === 'not-found') {
+          navigate('/meeting-error?reason=not-found');
+        } else {
+          navigate('/meeting-error?reason=not-found');
+        }
       }
     };
 
     join();
 
     socket.on('user-left', ({ socketId }: any) => {
-      // If pinned user left, unpin
-      setPinnedId((prev) => prev === socketId ? null : prev);
+      setPinnedId((prev) => (prev === socketId ? null : prev));
     });
 
-    // Listen for host ending the meeting
+    // ── Listen for host ending the meeting ────────────────────────────────
     socket.on('meeting-ended', () => {
-      alert('Meeting ended by host.');
       leaveRoom();
-      navigate('/meetings');
+      setMeetingEndedOverlay(true);
+      setCountdown(4);
+
+      // Countdown then redirect
+      let secs = 4;
+      countdownRef.current = setInterval(() => {
+        secs -= 1;
+        setCountdown(secs);
+        if (secs <= 0) {
+          clearInterval(countdownRef.current!);
+          navigate('/meetings');
+        }
+      }, 1000);
     });
 
     return () => {
       socket.off('user-left');
       socket.off('meeting-ended');
+      if (countdownRef.current) clearInterval(countdownRef.current);
       leaveRoom();
       disconnectSocket();
     };
-  }, [roomId, accessToken, socket, joinRoom, leaveRoom, navigate]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [roomId, accessToken, socket]);
 
-  // Host leaves → generate summary + navigate
-  const handleLeave = async () => {
+  // ─── Non-host: Leave Meeting ──────────────────────────────────────────────
+  const handleLeave = () => {
     leaveRoom();
     navigate('/meetings');
   };
 
-  // Host-only: End the call for everyone
+  // ─── Host only: End Meeting for everyone ─────────────────────────────────
   const handleEndCall = async () => {
     if (!isHost) return;
 
     try {
-      // Call backend to update meeting status to 'ended'
-      if (roomId) {
-        await endMeetingApi(roomId);
-      }
+      if (roomId) await endMeetingApi(roomId);
     } catch (err) {
       console.error('Failed to end meeting on backend', err);
     }
 
-    // Notify all participants
+    // Notify all participants via socket
     if (socket && roomId) {
       socket.emit('end-meeting', { roomId });
     }
 
-    // Small delay to ensure the 'end-meeting' socket event is sent before we disconnect
+    // Host also leaves and goes to summary
     setTimeout(() => {
       leaveRoom();
-
-      // Generate AI summary if meeting data exists
       if (meetingData?._id) {
         generateSummary(meetingData._id)
           .then(() => navigate(`/meeting/${meetingData._id}/summary`))
@@ -137,7 +163,47 @@ const VideoRoomPage = () => {
   return (
     <div className="flex h-screen bg-[#0a0a0c] overflow-hidden font-sans selection:bg-blue-500/30">
 
-      {/* ── Left side: Videos ─────────────────────────────────────── */}
+      {/* ── Meeting Ended Full-Screen Overlay ──────────────────────────────── */}
+      {meetingEndedOverlay && (
+        <div className="absolute inset-0 z-[200] bg-black/90 backdrop-blur-2xl flex flex-col items-center justify-center gap-6 animate-in fade-in duration-500">
+          {/* Icon */}
+          <div className="w-24 h-24 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center shadow-2xl shadow-red-500/10">
+            <svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-red-400">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+            </svg>
+          </div>
+
+          <div className="text-center space-y-2">
+            <h2 className="text-white text-2xl sm:text-3xl font-black tracking-tight">
+              This meeting has ended
+            </h2>
+            <p className="text-slate-400 font-medium text-sm sm:text-base">
+              The host ended this meeting for everyone.
+            </p>
+          </div>
+
+          {/* Countdown */}
+          <div className="flex flex-col items-center gap-2">
+            <div className="w-14 h-14 rounded-full border-2 border-white/10 bg-white/5 flex items-center justify-center">
+              <span className="text-white text-2xl font-black">{countdown}</span>
+            </div>
+            <p className="text-slate-600 text-xs font-medium uppercase tracking-widest">
+              Redirecting in {countdown}s
+            </p>
+          </div>
+
+          <button
+            onClick={() => { if (countdownRef.current) clearInterval(countdownRef.current); navigate('/meetings'); }}
+            className="px-6 py-3 bg-white/5 hover:bg-white/10 border border-white/10 text-white text-sm font-bold rounded-2xl transition-all"
+          >
+            Go to My Meetings Now
+          </button>
+        </div>
+      )}
+
+      {/* ── Left side: Videos ─────────────────────────────────────────────── */}
       <div className="flex-1 flex flex-col relative">
 
         {/* Top bar */}
@@ -147,9 +213,11 @@ const VideoRoomPage = () => {
               <span className="text-white font-black text-lg sm:text-xl">I</span>
             </div>
             <div className="hidden sm:block">
-              <h2 className="text-white font-bold text-sm tracking-tight">Room: {roomId}</h2>
+              <h2 className="text-white font-bold text-sm tracking-tight">
+                {meetingData?.title || `Room: ${roomId}`}
+              </h2>
               <div className="flex items-center gap-2">
-                <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
+                <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
                 <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">
                   {1 + remoteStreams.length} participant{remoteStreams.length !== 0 ? 's' : ''} Online
                 </p>
@@ -161,10 +229,12 @@ const VideoRoomPage = () => {
             {/* Copy invite link */}
             <button
               onClick={() => {
-                const url = window.location.href;
-                navigator.clipboard.writeText(url);
-                alert('Invite link copied to clipboard! Share it with your friend.');
+                navigator.clipboard.writeText(window.location.href.replace('/live', ''));
+                // Use a non-blocking toast-like indicator instead of alert
+                const btn = document.getElementById('invite-btn');
+                if (btn) { btn.textContent = '✅ Copied!'; setTimeout(() => { btn.textContent = '🔗 Invite'; }, 2000); }
               }}
+              id="invite-btn"
               className="hidden sm:flex px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-[10px] font-bold uppercase tracking-widest rounded-lg shadow-lg shadow-indigo-600/20 transition-all"
             >
               🔗 Invite
@@ -217,20 +287,22 @@ const VideoRoomPage = () => {
 
             {/* Leave button — available to everyone */}
             <button
+              id="leave-btn"
               onClick={handleLeave}
               className="h-9 sm:h-10 px-3 sm:px-5 bg-slate-700 hover:bg-slate-600 text-white text-[10px] sm:text-xs font-black uppercase tracking-widest rounded-xl transition-all duration-300 shadow-lg border border-slate-600/30"
             >
               Leave
             </button>
 
-            {/* End Call — HOST ONLY */}
+            {/* End Meeting — HOST ONLY */}
             {isHost && (
               <button
+                id="end-call-btn"
                 onClick={handleEndCall}
-                className="h-9 sm:h-10 px-3 sm:px-5 bg-red-600 hover:bg-red-700 text-white text-[10px] sm:text-xs font-black uppercase tracking-widest rounded-xl transition-all duration-300 shadow-lg shadow-red-600/20 border border-red-500/30 animate-in fade-in duration-500"
-                title="End call for everyone and generate AI summary"
+                className="h-9 sm:h-10 px-3 sm:px-5 bg-red-600 hover:bg-red-700 text-white text-[10px] sm:text-xs font-black uppercase tracking-widest rounded-xl transition-all duration-300 shadow-lg shadow-red-600/20 border border-red-500/30"
+                title="End call for everyone"
               >
-                🔴 End Call
+                🔴 End Meeting
               </button>
             )}
           </div>
@@ -248,7 +320,7 @@ const VideoRoomPage = () => {
               : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
           }`}>
 
-            {/* Local video (your own camera) */}
+            {/* Local video */}
             <VideoTile
               stream={localStream}
               label={`${user?.name || 'You'} (You)`}
@@ -260,7 +332,7 @@ const VideoRoomPage = () => {
               avatar={user?.avatar}
             />
 
-            {/* Remote videos (other participants) */}
+            {/* Remote videos */}
             {orderedRemoteStreams.map((remote) => (
               <VideoTile
                 key={remote.socketId}
@@ -275,7 +347,7 @@ const VideoRoomPage = () => {
           </div>
         </div>
 
-        {/* Floating Join Indicator */}
+        {/* Joining indicator */}
         {!hasJoined && (
           <div className="absolute inset-0 z-50 bg-black/80 backdrop-blur-2xl flex items-center justify-center">
             <div className="text-center space-y-6">
@@ -289,7 +361,7 @@ const VideoRoomPage = () => {
         )}
       </div>
 
-      {/* ── Right side: Chat & Participants ──────────────────────── */}
+      {/* ── Right side: Chat & Participants ────────────────────────────────── */}
       {showChat && (
         <div className="absolute inset-0 sm:relative sm:inset-auto z-40 w-full sm:w-96 flex-shrink-0 border-l border-white/5 bg-[#0a0a0c] sm:bg-[#121215]/50 backdrop-blur-3xl animate-in slide-in-from-right duration-500 flex flex-col">
           <div className="flex-1 overflow-hidden flex flex-col relative">

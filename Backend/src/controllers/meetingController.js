@@ -105,14 +105,17 @@ const joinMeeting = async (req, res) => {
   if (!meeting) {
     return res.status(404).json({
       success: false,
+      reason: 'not-found',
       message: 'Meeting not found. Check the Room ID.',
     });
   }
 
-  // Check if meeting is already ended
+  // Check if meeting is already ended — 410 Gone
   if (meeting.status === 'ended') {
-    return res.status(403).json({
+    return res.status(410).json({
       success: false,
+      reason: 'ended',
+      endedAt: meeting.endedAt,
       message: 'This meeting has ended.',
     });
   }

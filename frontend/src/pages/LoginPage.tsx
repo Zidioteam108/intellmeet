@@ -16,6 +16,7 @@ const LoginPage = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const location = useLocation()
+  const returnUrl = new URLSearchParams(location.search).get('returnUrl') || ''
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -178,7 +179,10 @@ const LoginPage = () => {
 
             <p className="mt-10 text-center text-slate-500 font-medium">
               New to IntellMeet?{' '}
-              <Link to="/signup" className="text-indigo-600 font-black hover:text-indigo-700 transition-standard border-b-2 border-indigo-100 hover:border-indigo-600">
+              <Link
+                to={returnUrl ? `/signup?returnUrl=${encodeURIComponent(returnUrl)}` : '/signup'}
+                className="text-indigo-600 font-black hover:text-indigo-700 transition-standard border-b-2 border-indigo-100 hover:border-indigo-600"
+              >
                 Create free account
               </Link>
             </p>

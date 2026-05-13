@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import { Socket } from 'socket.io-client';
 
 // ICE server config — tells WebRTC where to find the STUN server
-const ICE_SERVERS = {
+const ICE_SERVERS: RTCConfiguration = {
   iceServers: [
     { urls: 'stun:stun.l.google.com:19302' },
     { urls: 'stun:stun1.l.google.com:19302' },
@@ -17,46 +17,61 @@ interface RemoteStream {
   isCameraOff?: boolean;
 }
 
-const useWebRTC = (socket: Socket | null, roomId: string, userName: string, avatar: string = '') => {
-  // Local camera and mic stream
-  const [localStream, setLocalStream] = useState<MediaStream | null>(null);
-
-  // All remote video streams from other participants
+const useWebRTC = (
+  socket: Socket | null,
+  roomId: string,
+  userName: string,
+  avatar: string = '',
+  /** Pre-acquired stream from PreJoinPage — skip getUserMedia if provided */
+  initialStream?: MediaStream | null,
+  initialCameraOff?: boolean,
+  initialMuted?: boolean,
+) => {
+  // ─── State ────────────────────────────────────────────────────────────────
+  const [localStream, setLocalStream] = useState<MediaStream | null>(initialStream ?? null);
   const [remoteStreams, setRemoteStreams] = useState<RemoteStream[]>([]);
+  const [isMuted, setIsMuted] = useState(initialMuted ?? false);
+  const [isCameraOff, setIsCameraOff] = useState(initialCameraOff ?? false);
+  const [isScreenSharing, setIsScreenSharing] = useState(false);
 
-  // Track whether user is muted
-  const [isMuted, setIsMuted] = useState(false);
-
-  // Track whether camera is off
-  const [isCameraOff, setIsCameraOff] = useState(false);
-
-  // Store all peer connections — one per remote participant
-  // key = socketId of remote user, value = RTCPeerConnection
+  // ─── Refs (stable across renders — critical for socket callbacks) ──────
   const peerConnections = useRef<Map<string, RTCPeerConnection>>(new Map());
+  const localStreamRef = useRef<MediaStream | null>(initialStream ?? null);
+  const hasInitialStream = useRef<boolean>(!!initialStream);
 
-  // Keep a ref to local stream for access inside event handlers
-  const localStreamRef = useRef<MediaStream | null>(null);
+  // Volatile values used inside socket callbacks — access via ref so
+  // the socket listeners never need to be re-attached when these change.
+  const userNameRef = useRef(userName);
+  const avatarRef = useRef(avatar);
+  const isCameraOffRef = useRef(initialCameraOff ?? false);
+
+  // Keep refs in sync with latest props/state
+  useEffect(() => { userNameRef.current = userName; }, [userName]);
+  useEffect(() => { avatarRef.current = avatar; }, [avatar]);
+  useEffect(() => { isCameraOffRef.current = isCameraOff; }, [isCameraOff]);
+
+  // Queue ICE candidates that arrive before setRemoteDescription
+  const pendingCandidates = useRef<Map<string, RTCIceCandidateInit[]>>(new Map());
 
   // ─────────────────────────────────────────────────────────────────────────
-  // Step A — Get camera and microphone
+  // Step A — Get camera and microphone (skipped if initialStream provided)
   // ─────────────────────────────────────────────────────────────────────────
   const startLocalStream = useCallback(async () => {
+    if (hasInitialStream.current && localStreamRef.current) {
+      return localStreamRef.current;
+    }
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: true,
-        audio: true,
-      });
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
       localStreamRef.current = stream;
       setLocalStream(stream);
       return stream;
     } catch (error: any) {
       console.error('Camera/mic access error:', error.message);
-      // If camera fails, try audio only
       try {
         const audioOnly = await navigator.mediaDevices.getUserMedia({ audio: true });
         localStreamRef.current = audioOnly;
         setLocalStream(audioOnly);
-        setIsCameraOff(true); // Automatically set camera off since we don't have video
+        setIsCameraOff(true);
         return audioOnly;
       } catch {
         return null;
@@ -67,10 +82,21 @@ const useWebRTC = (socket: Socket | null, roomId: string, userName: string, avat
   // ─────────────────────────────────────────────────────────────────────────
   // Step B — Create a peer connection for a specific remote user
   // ─────────────────────────────────────────────────────────────────────────
-  const createPeerConnection = useCallback((remoteSocketId: string, remoteUserName: string, remoteAvatar: string = '', remoteIsCameraOff?: boolean) => {
+  const createPeerConnection = useCallback((
+    remoteSocketId: string,
+    remoteUserName: string,
+    remoteAvatar: string = '',
+    remoteIsCameraOff?: boolean,
+  ) => {
+    // If a connection already exists, close and replace it
+    if (peerConnections.current.has(remoteSocketId)) {
+      peerConnections.current.get(remoteSocketId)!.close();
+      peerConnections.current.delete(remoteSocketId);
+    }
+
     const pc = new RTCPeerConnection(ICE_SERVERS);
 
-    // When ICE candidates are found, send to remote user via socket
+    // ── ICE candidates → send to remote via socket ────────────────────────
     pc.onicecandidate = (event) => {
       if (event.candidate && socket) {
         socket.emit('ice-candidate', {
@@ -80,21 +106,42 @@ const useWebRTC = (socket: Socket | null, roomId: string, userName: string, avat
       }
     };
 
-    // When remote video/audio arrives, add to remoteStreams state
+    // ── Remote tracks arrive → add to React state ─────────────────────────
     pc.ontrack = (event) => {
       const stream = event.streams[0];
+      if (!stream) return;
       setRemoteStreams((prev) => {
         const exists = prev.find((r) => r.socketId === remoteSocketId);
         if (exists) return prev;
-        return [...prev, { socketId: remoteSocketId, stream, userName: remoteUserName, avatar: remoteAvatar, isCameraOff: remoteIsCameraOff }];
+        return [
+          ...prev,
+          {
+            socketId: remoteSocketId,
+            stream,
+            userName: remoteUserName,
+            avatar: remoteAvatar,
+            isCameraOff: remoteIsCameraOff,
+          },
+        ];
       });
     };
 
-    // Add local tracks to this peer connection
-    const localStream = localStreamRef.current;
-    if (localStream) {
-      localStream.getTracks().forEach((track) => {
-        pc.addTrack(track, localStream);
+    // ── Connection state logging ──────────────────────────────────────────
+    pc.onconnectionstatechange = () => {
+      console.log(`[WebRTC] ${remoteSocketId} connection: ${pc.connectionState}`);
+      if (pc.connectionState === 'failed' || pc.connectionState === 'disconnected') {
+        // Cleanup stale connection
+        pc.close();
+        peerConnections.current.delete(remoteSocketId);
+        setRemoteStreams((prev) => prev.filter((r) => r.socketId !== remoteSocketId));
+      }
+    };
+
+    // ── Add local tracks BEFORE creating offer/answer ─────────────────────
+    const stream = localStreamRef.current;
+    if (stream) {
+      stream.getTracks().forEach((track) => {
+        pc.addTrack(track, stream);
       });
     }
 
@@ -102,64 +149,135 @@ const useWebRTC = (socket: Socket | null, roomId: string, userName: string, avat
     return pc;
   }, [socket]);
 
+  // ─── Helper: flush queued ICE candidates after setRemoteDescription ────
+  const flushCandidates = useCallback(async (socketId: string) => {
+    const queued = pendingCandidates.current.get(socketId);
+    if (!queued || queued.length === 0) return;
+    const pc = peerConnections.current.get(socketId);
+    if (!pc) return;
+    for (const candidate of queued) {
+      try {
+        await pc.addIceCandidate(new RTCIceCandidate(candidate));
+      } catch (e) {
+        console.warn('[WebRTC] Failed to add queued ICE candidate:', e);
+      }
+    }
+    pendingCandidates.current.delete(socketId);
+  }, []);
+
   // ─────────────────────────────────────────────────────────────────────────
-  // Step C — Listen to Socket.io events
+  // Step C — Socket event listeners (attached ONCE when socket+roomId exist)
   // ─────────────────────────────────────────────────────────────────────────
   useEffect(() => {
     if (!socket || !roomId) return;
 
-    // When a NEW user joins the room, we (the existing user) create an offer
-    const handleUserJoined = async ({ socketId, userName: remoteUserName, avatar: remoteAvatar, isCameraOff: remoteIsCameraOff }: any) => {
-      console.log('User joined:', remoteUserName, socketId);
+    // ── user-joined: a NEW user joined → we (existing) create an offer ────
+    const handleUserJoined = async ({
+      socketId,
+      userName: remoteUserName,
+      avatar: remoteAvatar,
+      isCameraOff: remoteIsCameraOff,
+    }: any) => {
+      console.log('[WebRTC] user-joined:', remoteUserName, socketId);
 
       const pc = createPeerConnection(socketId, remoteUserName, remoteAvatar, remoteIsCameraOff);
 
-      // Create an offer
-      const offer = await pc.createOffer();
-      await pc.setLocalDescription(offer);
+      try {
+        const offer = await pc.createOffer();
+        await pc.setLocalDescription(offer);
 
-      // Send offer to the new user, including OUR details
-      socket.emit('offer', { to: socketId, offer, userName, avatar, isCameraOff });
+        // Send offer with OUR current metadata (read from refs, not stale closure)
+        socket.emit('offer', {
+          to: socketId,
+          offer,
+          userName: userNameRef.current,
+          avatar: avatarRef.current,
+          isCameraOff: isCameraOffRef.current,
+        });
+      } catch (err) {
+        console.error('[WebRTC] Failed to create offer:', err);
+      }
     };
 
-    // When we receive an offer from another user, create an answer
-    const handleOffer = async ({ from, offer, userName: remoteUserName, avatar: remoteAvatar, isCameraOff: remoteIsCameraOff }: any) => {
-      const pc = createPeerConnection(from, remoteUserName || 'Remote User', remoteAvatar, remoteIsCameraOff);
+    // ── offer: we received an offer → create answer ───────────────────────
+    const handleOffer = async ({
+      from,
+      offer,
+      userName: remoteUserName,
+      avatar: remoteAvatar,
+      isCameraOff: remoteIsCameraOff,
+    }: any) => {
+      console.log('[WebRTC] offer received from:', from);
 
-      await pc.setRemoteDescription(new RTCSessionDescription(offer));
+      const pc = createPeerConnection(
+        from,
+        remoteUserName || 'Remote User',
+        remoteAvatar,
+        remoteIsCameraOff,
+      );
 
-      const answer = await pc.createAnswer();
-      await pc.setLocalDescription(answer);
+      try {
+        await pc.setRemoteDescription(new RTCSessionDescription(offer));
+        // Flush any ICE candidates that arrived before this
+        await flushCandidates(from);
 
-      socket.emit('answer', { to: from, answer });
+        const answer = await pc.createAnswer();
+        await pc.setLocalDescription(answer);
+
+        socket.emit('answer', { to: from, answer });
+      } catch (err) {
+        console.error('[WebRTC] Failed to handle offer:', err);
+      }
     };
 
-    // When we receive an answer, set it as the remote description
+    // ── answer: our offer was accepted → set remote description ───────────
     const handleAnswer = async ({ from, answer }: any) => {
+      console.log('[WebRTC] answer received from:', from);
       const pc = peerConnections.current.get(from);
       if (pc) {
-        await pc.setRemoteDescription(new RTCSessionDescription(answer));
+        try {
+          await pc.setRemoteDescription(new RTCSessionDescription(answer));
+          await flushCandidates(from);
+        } catch (err) {
+          console.error('[WebRTC] Failed to set remote description:', err);
+        }
       }
     };
 
-    // When we receive an ICE candidate, add it to the right peer connection
+    // ── ice-candidate: queue or add immediately ───────────────────────────
     const handleIceCandidate = async ({ from, candidate }: any) => {
+      if (!candidate) return;
       const pc = peerConnections.current.get(from);
-      if (pc && candidate) {
+
+      // If PC doesn't exist yet or remote description not set, queue it
+      if (!pc || !pc.remoteDescription) {
+        if (!pendingCandidates.current.has(from)) {
+          pendingCandidates.current.set(from, []);
+        }
+        pendingCandidates.current.get(from)!.push(candidate);
+        return;
+      }
+
+      try {
         await pc.addIceCandidate(new RTCIceCandidate(candidate));
+      } catch (err) {
+        console.warn('[WebRTC] Failed to add ICE candidate:', err);
       }
     };
 
-    // When a user leaves, remove their stream
+    // ── user-left: clean up peer connection ───────────────────────────────
     const handleUserLeft = ({ socketId }: any) => {
+      console.log('[WebRTC] user-left:', socketId);
       const pc = peerConnections.current.get(socketId);
       if (pc) {
         pc.close();
         peerConnections.current.delete(socketId);
       }
+      pendingCandidates.current.delete(socketId);
       setRemoteStreams((prev) => prev.filter((r) => r.socketId !== socketId));
     };
 
+    // ── camera toggle from remote user ────────────────────────────────────
     const handleCameraToggle = ({ socketId, isCameraOff }: any) => {
       setRemoteStreams((prev) =>
         prev.map((r) =>
@@ -168,7 +286,7 @@ const useWebRTC = (socket: Socket | null, roomId: string, userName: string, avat
       );
     };
 
-    // Attach event listeners
+    // Attach listeners
     socket.on('user-joined', handleUserJoined);
     socket.on('offer', handleOffer);
     socket.on('answer', handleAnswer);
@@ -177,7 +295,6 @@ const useWebRTC = (socket: Socket | null, roomId: string, userName: string, avat
     socket.on('user-camera-toggle', handleCameraToggle);
 
     return () => {
-      // Remove listeners when component unmounts
       socket.off('user-joined', handleUserJoined);
       socket.off('offer', handleOffer);
       socket.off('answer', handleAnswer);
@@ -185,7 +302,9 @@ const useWebRTC = (socket: Socket | null, roomId: string, userName: string, avat
       socket.off('user-left', handleUserLeft);
       socket.off('user-camera-toggle', handleCameraToggle);
     };
-  }, [socket, roomId, createPeerConnection]);
+    // CRITICAL: only re-run when socket or roomId changes.
+    // userName/avatar/isCameraOff are read from refs inside the callbacks.
+  }, [socket, roomId, createPeerConnection, flushCandidates]);
 
   // ─────────────────────────────────────────────────────────────────────────
   // Step D — Join the room after local stream is ready
@@ -195,9 +314,14 @@ const useWebRTC = (socket: Socket | null, roomId: string, userName: string, avat
     if (!stream) return;
 
     if (socket) {
-      socket.emit('join-room', { roomId, userName, avatar, isCameraOff });
+      socket.emit('join-room', {
+        roomId,
+        userName: userNameRef.current,
+        avatar: avatarRef.current,
+        isCameraOff: isCameraOffRef.current,
+      });
     }
-  }, [socket, roomId, userName, avatar, isCameraOff, startLocalStream]);
+  }, [socket, roomId, startLocalStream]);
 
   // ─────────────────────────────────────────────────────────────────────────
   // Step E — Mute/unmute audio
@@ -205,11 +329,9 @@ const useWebRTC = (socket: Socket | null, roomId: string, userName: string, avat
   const toggleMute = useCallback(() => {
     const stream = localStreamRef.current;
     if (!stream) return;
-
     stream.getAudioTracks().forEach((track) => {
       track.enabled = !track.enabled;
     });
-
     setIsMuted((prev) => !prev);
   }, []);
 
@@ -219,11 +341,9 @@ const useWebRTC = (socket: Socket | null, roomId: string, userName: string, avat
   const toggleCamera = useCallback(() => {
     const stream = localStreamRef.current;
     if (!stream) return;
-
     stream.getVideoTracks().forEach((track) => {
       track.enabled = !track.enabled;
     });
-
     setIsCameraOff((prev) => {
       const newState = !prev;
       if (socket) {
@@ -237,54 +357,39 @@ const useWebRTC = (socket: Socket | null, roomId: string, userName: string, avat
   // Step G — Leave room and clean up
   // ─────────────────────────────────────────────────────────────────────────
   const leaveRoom = useCallback(() => {
-    // Stop all media tracks
     localStreamRef.current?.getTracks().forEach((track) => track.stop());
-
-    // Close all peer connections
     peerConnections.current.forEach((pc) => pc.close());
     peerConnections.current.clear();
-
-    // Reset state
+    pendingCandidates.current.clear();
     setLocalStream(null);
     setRemoteStreams([]);
-
     if (socket) {
       socket.emit('leave-room', { roomId });
     }
   }, [socket, roomId]);
 
   // ─────────────────────────────────────────────────────────────────────────
-  // Screen Sharing — replaces camera with screen stream
+  // Screen Sharing
   // ─────────────────────────────────────────────────────────────────────────
-  const [isScreenSharing, setIsScreenSharing] = useState(false);
-
   const startScreenShare = useCallback(async () => {
     try {
-      // Ask browser to show the screen picker dialog
       const screenStream = await navigator.mediaDevices.getDisplayMedia({
         video: true,
         audio: false,
       });
-
       const screenTrack = screenStream.getVideoTracks()[0];
 
-      // Replace the camera video track in all peer connections
       peerConnections.current.forEach((pc) => {
         const sender = pc.getSenders().find((s) => s.track?.kind === 'video');
-        if (sender) {
-          sender.replaceTrack(screenTrack);
-        }
+        if (sender) sender.replaceTrack(screenTrack);
       });
 
-      // Show screen in local video
       setLocalStream(screenStream);
       setIsScreenSharing(true);
 
-      // When user stops sharing from browser button
       screenTrack.onended = () => {
         stopScreenShare();
       };
-
     } catch (err) {
       console.error('Screen share error:', err);
     }
@@ -292,7 +397,6 @@ const useWebRTC = (socket: Socket | null, roomId: string, userName: string, avat
 
   const stopScreenShare = useCallback(async () => {
     const cameraStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-
     const cameraTrack = cameraStream.getVideoTracks()[0];
 
     peerConnections.current.forEach((pc) => {

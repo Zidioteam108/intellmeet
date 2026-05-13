@@ -18,6 +18,7 @@ const SignupPage = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const location = useLocation()
+  const returnUrl = new URLSearchParams(location.search).get('returnUrl') || ''
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -190,7 +191,10 @@ const SignupPage = () => {
 
             <p className="mt-8 text-center text-slate-500 font-medium">
               Already have an account?{' '}
-              <Link to="/login" className="text-indigo-600 font-black hover:text-indigo-700 transition-standard border-b-2 border-indigo-100 hover:border-indigo-600">
+              <Link
+                to={returnUrl ? `/login?returnUrl=${encodeURIComponent(returnUrl)}` : '/login'}
+                className="text-indigo-600 font-black hover:text-indigo-700 transition-standard border-b-2 border-indigo-100 hover:border-indigo-600"
+              >
                 Sign in here
               </Link>
             </p>
