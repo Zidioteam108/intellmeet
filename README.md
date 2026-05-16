@@ -2,7 +2,7 @@
 
 ![IntellMeet Banner](frontend/src/assets/logo.png)
 
-> 🌐 **Live Demo:** [https://intellmeet.vercel.app](https://intellmeet.vercel.app)  
+> 🌐 **Live Demo:** [https://intellmeet-six.vercel.app](https://intellmeet-six.vercel.app)  
 > 🎬 **Demo Video:** *(Upload to YouTube/Loom and paste link here)*  
 > 📧 **Demo Credentials:** `demo@intellmeet.com` / `Demo1234!`
 
@@ -15,6 +15,16 @@ IntellMeet is a full-stack, AI-powered enterprise meeting platform built for rea
 | Performance | Accessibility | Best Practices | SEO |
 |---|---|---|---|
 | ~74 | ~85 | 92 | ~83 |
+
+### 📸 Screenshots
+
+| Landing Page | Login |
+|---|---|
+| ![Landing](screenshots/landing_page.png) | ![Login](screenshots/login_page.png) |
+
+| Signup | Dashboard |
+|---|---|
+| ![Signup](screenshots/signup_page.png) | ![Dashboard](screenshots/dashboard.png) |
 
 ---
 

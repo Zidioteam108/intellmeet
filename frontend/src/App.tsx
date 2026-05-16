@@ -11,6 +11,8 @@ import ProtectedRoute from './components/ProtectedRoute'
 import DashboardLayout from './components/DashboardLayout'
 import VideoRoomPage from './pages/VideoRoomPage'
 import PostMeetingPage from './pages/PostMeetingPage'
+import MeetingErrorPage from './pages/MeetingErrorPage'
+import PreJoinPage from './pages/PreJoinPage'
 
 import KanbanPage from './pages/KanbanPage'
 import AnalyticsPage from './pages/AnalyticsPage'
@@ -25,10 +27,10 @@ function App() {
   const [isPreloading, setIsPreloading] = useState(true)
 
   useEffect(() => {
-    // Show preloader on initial load and when navigating to specified public routes
-    const publicRoutes = ['/', '/login', '/signup']
+    // Show preloader when navigating to specified auth routes
+    const authRoutes = ['/login', '/signup']
     
-    if (publicRoutes.includes(location.pathname)) {
+    if (authRoutes.includes(location.pathname)) {
       setIsPreloading(true)
       const timer = setTimeout(() => {
         setIsPreloading(false)
@@ -42,27 +44,18 @@ function App() {
     }
   }, [location.pathname])
 
-  if (isAuthLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="text-center animate-pulse">
-          <div className="text-4xl mb-3">🛰️</div>
-          <p className="text-slate-500 font-medium text-sm">Initializing IntellMeet...</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <>
-      <Preloader isLoading={isPreloading} />
+      <Preloader isLoading={isAuthLoading || isPreloading} />
       
-      <div className={`transition-opacity duration-1000 ${isPreloading ? 'opacity-0' : 'opacity-100'}`}>
+      <div className={`transition-opacity duration-1000 ${(isAuthLoading || isPreloading) ? 'opacity-0' : 'opacity-100'}`}>
         <Routes>
           {/* Public routes */}
           <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
+          {/* Public error page — no auth required so bad links still show the right message */}
+          <Route path="/meeting-error" element={<MeetingErrorPage />} />
 
           {/* Protected routes — wrapped in DashboardLayout */}
           <Route path="/dashboard" element={
@@ -90,9 +83,10 @@ function App() {
               <DashboardLayout><AnalyticsPage /></DashboardLayout>
             </ProtectedRoute>
           } />
+          {/* Pre-join lobby — shown before entering the meeting room */}
           <Route path="/room/:roomId" element={
             <ProtectedRoute>
-              <VideoRoomPage />
+              <PreJoinPage />
             </ProtectedRoute>
           } />
           <Route path="/meeting/:meetingId/summary" element={

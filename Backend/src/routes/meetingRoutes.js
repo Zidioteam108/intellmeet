@@ -10,6 +10,7 @@ const {
   updateMeeting,
   deleteMeeting,
   joinMeeting,
+  endMeeting,
 } = require('../controllers/meetingController');
 
 const meetingValidation = [
@@ -31,5 +32,6 @@ router.route('/:id')
   .delete(deleteMeeting);
 
 router.get('/join/:roomId', joinMeeting);
+router.post('/end/:roomId', endMeeting);
 
 module.exports = router;

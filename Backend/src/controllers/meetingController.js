@@ -132,8 +132,8 @@ const joinMeeting = async (req, res) => {
     });
   }
 
-  // ── Guard 2: Is the meeting ended or expired? ──────────────────────────
-  if (meeting.status === 'ended' || meeting.status === 'expired') {
+  // Check if meeting is already ended — 410 Gone
+  if (meeting.status === 'ended') {
     return res.status(410).json({
       success: false,
       reason: 'ended',
@@ -142,40 +142,7 @@ const joinMeeting = async (req, res) => {
     });
   }
 
-  // ── Guard 3: Is the meeting cancelled? ────────────────────────────────
-  if (meeting.status === 'cancelled') {
-    return res.status(410).json({
-      success: false,
-      reason: 'cancelled',
-      message: 'This meeting has been cancelled.',
-    });
-  }
-
-  // ── Guard 4: Is the meeting scheduled for a future time? ──────────────
-  if (meeting.scheduledFor && new Date(meeting.scheduledFor) > new Date()) {
-    return res.status(403).json({
-      success: false,
-      reason: 'not-started',
-      scheduledFor: meeting.scheduledFor,
-      message: 'This meeting has not started yet. Please join at the scheduled time.',
-    });
-  }
-
-  // ── Guard 5: Has the scheduled end time already passed? ───────────────
-  if (meeting.scheduledEndAt && new Date(meeting.scheduledEndAt) < new Date()) {
-    // Auto-expire the meeting
-    meeting.status = 'expired';
-    meeting.endedAt = new Date();
-    await meeting.save();
-    return res.status(410).json({
-      success: false,
-      reason: 'ended',
-      endedAt: meeting.endedAt,
-      message: 'This meeting has already ended.',
-    });
-  }
-
-  // ── Add participant if not already in list ────────────────────────────
+  // Check if user is already in participants list
   const alreadyJoined = meeting.participants.some(
     (p) => p._id.toString() === req.user._id.toString()
   );
@@ -229,9 +196,6 @@ const deleteMeeting = async (req, res) => {
   });
 };
 
-// ── End Meeting (REST fallback — primary end is via socket) ──────────────
-// This exists as a REST fallback. The canonical end is done inside the
-// socket handler which also broadcasts to all participants.
 const endMeeting = async (req, res) => {
   const { roomId } = req.params;
 
@@ -257,6 +221,10 @@ const endMeeting = async (req, res) => {
 
   // Invalidate cache
   await deleteCache(`meetings:user:${req.user._id}`);
+
+  meeting.status = 'ended';
+  meeting.endedAt = new Date();
+  await meeting.save();
 
   res.status(200).json({
     success: true,

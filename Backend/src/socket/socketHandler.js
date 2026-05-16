@@ -104,6 +104,7 @@ const socketHandler = (io) => {
     });
 
     // ── Join Room ────────────────────────────────────────────────────────
+    // ── Join Room ──────────────────────────────────────────────────────
     socket.on('join-room', ({ roomId, userId, userName, avatar, isCameraOff }) => {
       socket.join(roomId);
 
@@ -138,7 +139,7 @@ const socketHandler = (io) => {
       socket.emit('room-info', { roomId, participants: roomSize });
     });
 
-    // ── WebRTC Offer ─────────────────────────────────────────────────────
+
     socket.on('offer', ({ to, offer, userName, avatar, isCameraOff }) => {
       io.to(to).emit('offer', { from: socket.id, offer, userName, avatar, isCameraOff });
     });
@@ -189,7 +190,7 @@ const socketHandler = (io) => {
       socket.to(roomId).emit('user-audio-toggle', { socketId: socket.id, isMuted });
     });
 
-    // ── Camera On/Off Status ─────────────────────────────────────────────
+    // ── Camera On/Off Status ───────────────────────────────────────────
     socket.on('toggle-camera', ({ roomId, isCameraOff }) => {
       socket.to(roomId).emit('user-camera-toggle', { socketId: socket.id, isCameraOff });
     });
@@ -263,6 +264,28 @@ const socketHandler = (io) => {
     });
 
     // ── Disconnect ───────────────────────────────────────────────────────
+    // ── End Meeting (Host Only) ─────────────────────────────────────────
+    socket.on('end-meeting', ({ roomId }) => {
+      console.log(`🛑 Meeting ended by host in room: ${roomId}`);
+      socket.to(roomId).emit('meeting-ended', { endedBy: socket.user?.name });
+    });
+
+    // ── Leave Room (explicit) ─────────────────────────────────────────────
+    socket.on('leave-room', ({ roomId }) => {
+      console.log(`👋 ${socket.user?.name} left room: ${roomId}`);
+      socket.leave(roomId);
+
+      if (rooms.has(roomId)) {
+        rooms.get(roomId).delete(socket.id);
+        if (rooms.get(roomId).size === 0) {
+          rooms.delete(roomId);
+        }
+      }
+
+      socket.to(roomId).emit('user-left', { socketId: socket.id });
+    });
+
+    // ── Disconnect ─────────────────────────────────────────────────────
     socket.on('disconnecting', () => {
       socket.rooms.forEach((roomId) => {
         if (roomId === socket.id) return; // skip personal room

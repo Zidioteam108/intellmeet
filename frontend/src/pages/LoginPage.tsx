@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import api from '@/lib/api'
 import { useAuthStore } from '@/store/authStore'
 import { Button } from '@/components/ui/button'
@@ -15,6 +15,8 @@ const LoginPage = () => {
   const [password, setPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
+  const location = useLocation()
+  const returnUrl = new URLSearchParams(location.search).get('returnUrl') || ''
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -34,7 +36,10 @@ const LoginPage = () => {
 
       const { user, accessToken } = response.data
       setAuth(user, accessToken)
-      navigate('/dashboard')
+      
+      const searchParams = new URLSearchParams(location.search)
+      const returnUrl = searchParams.get('returnUrl') || '/dashboard'
+      navigate(returnUrl)
     } catch (err: any) {
       setError(err.response?.data?.message || 'Login failed. Please check your credentials.')
     } finally {
@@ -174,7 +179,10 @@ const LoginPage = () => {
 
             <p className="mt-10 text-center text-slate-500 font-medium">
               New to IntellMeet?{' '}
-              <Link to="/signup" className="text-indigo-600 font-black hover:text-indigo-700 transition-standard border-b-2 border-indigo-100 hover:border-indigo-600">
+              <Link
+                to={returnUrl ? `/signup?returnUrl=${encodeURIComponent(returnUrl)}` : '/signup'}
+                className="text-indigo-600 font-black hover:text-indigo-700 transition-standard border-b-2 border-indigo-100 hover:border-indigo-600"
+              >
                 Create free account
               </Link>
             </p>
