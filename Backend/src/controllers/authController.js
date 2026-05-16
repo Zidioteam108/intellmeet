@@ -70,7 +70,6 @@ const signup = async (req, res) => {
   res.status(201).json({
     success: true,
     message: 'Account created. Please check your email to verify your account.',
-    verifyUrl: verifyUrl, // Added for UI bypass
   });
 };
 
@@ -135,7 +134,6 @@ const login = async (req, res) => {
       success: false,
       message: 'Account not verified. A new verification link has been sent to your email.',
       isNotVerified: true,
-      verifyUrl: verifyUrl, // Added for UI bypass
     });
   }
 
@@ -280,7 +278,7 @@ const forgotPassword = async (req, res) => {
     // We don't fail the request here, so the Dev Mode UI bypass still works
   }
 
-  res.status(200).json({ success: true, message: 'If that email is registered, a reset link has been sent.', resetUrl: resetUrl });
+  res.status(200).json({ success: true, message: 'If that email is registered, a reset link has been sent.' });
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
