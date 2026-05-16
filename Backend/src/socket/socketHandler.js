@@ -90,6 +90,13 @@ const socketHandler = (io) => {
       next();
 
     } catch (err) {
+      // Use a specific, machine-readable message for expired tokens so the
+      // frontend socket utility can catch it and auto-refresh the access token
+      // without forcing the user to log out.
+      if (err.name === 'TokenExpiredError') {
+        console.warn(`⚠️  Socket JWT expired for connection attempt — client should refresh token`);
+        return next(new Error('jwt expired'));
+      }
       console.error('Socket Auth Error:', err.message);
       next(new Error('Invalid token'));
     }
