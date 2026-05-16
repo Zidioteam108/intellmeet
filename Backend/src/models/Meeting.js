@@ -33,12 +33,18 @@ const meetingSchema = new mongoose.Schema(
     ],
     status: {
       type: String,
-      enum: ['scheduled', 'active', 'ended', 'cancelled'],
+      enum: ['scheduled', 'active', 'ended', 'expired', 'cancelled'],
       default: 'scheduled',
     },
+    // When the meeting is scheduled to start (optional — blocks early join if set)
     scheduledFor: {
       type: Date,
-      default: Date.now,
+      default: null,
+    },
+    // Optional hard end time set by host at creation
+    scheduledEndAt: {
+      type: Date,
+      default: null,
     },
     startedAt: {
       type: Date,
@@ -47,6 +53,17 @@ const meetingSchema = new mongoose.Schema(
     endedAt: {
       type: Date,
       default: null,
+    },
+    // Which user ended the meeting
+    endedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      default: null,
+    },
+    // Whether participants can rejoin after meeting ends (always false once ended)
+    allowRejoin: {
+      type: Boolean,
+      default: true,
     },
     summary: {
       type: String,
