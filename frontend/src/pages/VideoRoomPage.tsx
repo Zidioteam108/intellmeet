@@ -3,7 +3,6 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { connectSocket, disconnectSocket } from '../utils/socket';
 import { getAllMeetings } from '../api/meetingsApi';
-import { getAllMeetings, endMeeting as endMeetingApi } from '../api/meetingsApi';
 import { generateSummary } from '../api/summaryApi';
 import useWebRTC from '../hooks/useWebRTC';
 import VideoTile from '../components/VideoTile';
@@ -40,13 +39,6 @@ const VideoRoomPage = ({ initialStream, initialCameraOff = false, initialMuted =
   const isHost = meetingData?.host?._id === user?.id || meetingData?.host === user?.id;
 
   // Initialize socket — memoised so it's created once per token
-  const [countdown, setCountdown] = useState(4);
-  const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  // Is the current user the host of this meeting?
-  const isHost = meetingData?.host?._id === user?.id || meetingData?.host === user?.id;
-
-  // Initialize socket
   const socket = useMemo(() => {
     if (accessToken) return connectSocket(accessToken);
     return null;
@@ -98,15 +90,11 @@ const VideoRoomPage = ({ initialStream, initialCameraOff = false, initialMuted =
   };
 
   // ── On page load: join room & register socket listeners ─────────────────
-
-  // ─── On page load, join room ─────────────────────────────────────────────
   useEffect(() => {
     if (!accessToken || !roomId || !socket) return;
 
     const join = async () => {
       try {
-        // If PreJoinPage already called joinMeetingApi, skip the API call —
-        // just fetch meeting data and connect socket
         await joinRoom();
         setHasJoined(true);
 
@@ -140,26 +128,6 @@ const VideoRoomPage = ({ initialStream, initialCameraOff = false, initialMuted =
 
     socket.on('user-left', ({ socketId }: any) => {
       setPinnedId((prev) => (prev === socketId ? null : prev));
-    socket.on('user-left', ({ socketId }: any) => {
-      setPinnedId((prev) => (prev === socketId ? null : prev));
-    });
-
-    // ── Listen for host ending the meeting ────────────────────────────────
-    socket.on('meeting-ended', () => {
-      leaveRoom();
-      setMeetingEndedOverlay(true);
-      setCountdown(4);
-
-      // Countdown then redirect
-      let secs = 4;
-      countdownRef.current = setInterval(() => {
-        secs -= 1;
-        setCountdown(secs);
-        if (secs <= 0) {
-          clearInterval(countdownRef.current!);
-          navigate('/meetings');
-        }
-      }, 1000);
     });
 
     return () => {
@@ -169,14 +137,12 @@ const VideoRoomPage = ({ initialStream, initialCameraOff = false, initialMuted =
       if (!cleanedUpRef.current) {
         leaveRoom();
       }
-      leaveRoom();
       disconnectSocket();
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [roomId, accessToken, socket]);
 
   // ── Non-host: Leave Meeting ──────────────────────────────────────────────
-  // ─── Non-host: Leave Meeting ──────────────────────────────────────────────
   const handleLeave = () => {
     leaveRoom();
     navigate('/meetings');
@@ -187,40 +153,7 @@ const VideoRoomPage = ({ initialStream, initialCameraOff = false, initialMuted =
   // → host receives 'meeting-ended' event like everyone else → handleMeetingEnd
   const handleEndCall = () => {
     if (!isHost || !socket || !roomId) return;
-    // Emit to server — server will do DB update and broadcast io.to(roomId)
     socket.emit('end-meeting', { roomId });
-  };
-
-  const handlePin = (socketId: string) => {
-    setPinnedId((prev) => (prev === socketId ? null : socketId));
-  };
-
-  // ─── Host only: End Meeting for everyone ─────────────────────────────────
-  const handleEndCall = async () => {
-    if (!isHost) return;
-
-    try {
-      if (roomId) await endMeetingApi(roomId);
-    } catch (err) {
-      console.error('Failed to end meeting on backend', err);
-    }
-
-    // Notify all participants via socket
-    if (socket && roomId) {
-      socket.emit('end-meeting', { roomId });
-    }
-
-    // Host also leaves and goes to summary
-    setTimeout(() => {
-      leaveRoom();
-      if (meetingData?._id) {
-        generateSummary(meetingData._id)
-          .then(() => navigate(`/meeting/${meetingData._id}/summary`))
-          .catch(() => navigate('/meetings'));
-      } else {
-        navigate('/meetings');
-      }
-    }, 500);
   };
 
   const handlePin = (socketId: string) => {
@@ -238,7 +171,6 @@ const VideoRoomPage = ({ initialStream, initialCameraOff = false, initialMuted =
     <div className="flex h-screen bg-[#0a0a0c] overflow-hidden font-sans selection:bg-blue-500/30">
 
       {/* ── Meeting Ended Full-Screen Overlay ─────────────────────────────── */}
-      {/* ── Meeting Ended Full-Screen Overlay ──────────────────────────────── */}
       {meetingEndedOverlay && (
         <div className="absolute inset-0 z-[200] bg-black/90 backdrop-blur-2xl flex flex-col items-center justify-center gap-6 animate-in fade-in duration-500">
           {/* Icon */}
@@ -259,11 +191,6 @@ const VideoRoomPage = ({ initialStream, initialCameraOff = false, initialMuted =
                 {meetingEndedBy} ended this meeting for everyone.
               </p>
             )}
-              This meeting has ended
-            </h2>
-            <p className="text-slate-400 font-medium text-sm sm:text-base">
-              The host ended this meeting for everyone.
-            </p>
           </div>
 
           {/* Countdown */}
@@ -282,7 +209,6 @@ const VideoRoomPage = ({ initialStream, initialCameraOff = false, initialMuted =
               if (countdownRef.current) clearInterval(countdownRef.current);
               navigate('/meetings');
             }}
-            onClick={() => { if (countdownRef.current) clearInterval(countdownRef.current); navigate('/meetings'); }}
             className="px-6 py-3 bg-white/5 hover:bg-white/10 border border-white/10 text-white text-sm font-bold rounded-2xl transition-all"
           >
             Go to My Meetings Now
@@ -317,7 +243,6 @@ const VideoRoomPage = ({ initialStream, initialCameraOff = false, initialMuted =
             <button
               onClick={() => {
                 navigator.clipboard.writeText(window.location.href.replace('/live', ''));
-                // Use a non-blocking toast-like indicator instead of alert
                 const btn = document.getElementById('invite-btn');
                 if (btn) { btn.textContent = '✅ Copied!'; setTimeout(() => { btn.textContent = '🔗 Invite'; }, 2000); }
               }}
@@ -449,7 +374,6 @@ const VideoRoomPage = ({ initialStream, initialCameraOff = false, initialMuted =
       </div>
 
       {/* ── Right side: Chat & Participants ─────────────────────────────────── */}
-      {/* ── Right side: Chat & Participants ────────────────────────────────── */}
       {showChat && (
         <div className="absolute inset-0 sm:relative sm:inset-auto z-40 w-full sm:w-96 flex-shrink-0 border-l border-white/5 bg-[#0a0a0c] sm:bg-[#121215]/50 backdrop-blur-3xl animate-in slide-in-from-right duration-500 flex flex-col">
           <div className="flex-1 overflow-hidden flex flex-col relative">

@@ -21,10 +21,7 @@ const MeetingErrorPage = () => {
     <div className="min-h-screen bg-[#080810] flex flex-col items-center justify-center p-6 relative overflow-hidden font-sans">
 
       {/* Animated background glows */}
-      <div
-        className="absolute inset-0 pointer-events-none"
-        aria-hidden="true"
-      >
+      <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
         <div
           className={`absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full transition-all duration-1000 ${mounted ? 'opacity-100' : 'opacity-0'}`}
           style={{
@@ -69,7 +66,7 @@ const MeetingErrorPage = () => {
         </div>
 
         <div className="bg-white/[0.04] border border-white/10 rounded-3xl p-8 sm:p-10 backdrop-blur-2xl shadow-2xl shadow-black/50">
-          
+
           {/* Icon */}
           <div className="flex justify-center mb-6">
             <div
@@ -82,52 +79,20 @@ const MeetingErrorPage = () => {
               }`}
             >
               {isEnded ? (
-                /* Lock / ended icon */
                 <svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 24 24" fill="none"
                   stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-red-400">
                   <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                   <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                 </svg>
               ) : isNotStarted ? (
-                /* Clock / not started icon */
                 <svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 24 24" fill="none"
                   stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-amber-400">
                   <circle cx="12" cy="12" r="10" />
                   <polyline points="12 6 12 12 16 14" />
                 </svg>
               ) : (
-                /* Broken link icon */
                 <svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 24 24" fill="none"
                   stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-indigo-400">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="44"
-                  height="44"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="text-red-400"
-                >
-                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                  <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                </svg>
-              ) : (
-                /* Broken link icon */
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="44"
-                  height="44"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="text-indigo-400"
-                >
                   <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
                   <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
                   <line x1="2" y1="2" x2="22" y2="22" />
@@ -149,11 +114,6 @@ const MeetingErrorPage = () => {
             >
               <span className={`w-1.5 h-1.5 rounded-full ${isEnded ? 'bg-red-400' : isNotStarted ? 'bg-amber-400' : 'bg-indigo-400'} animate-pulse`} />
               {isEnded ? 'Meeting Ended' : isNotStarted ? 'Meeting Not Started Yet' : 'Meeting Not Found'}
-                  : 'bg-indigo-500/10 border-indigo-500/20 text-indigo-400'
-              }`}
-            >
-              <span className={`w-1.5 h-1.5 rounded-full ${isEnded ? 'bg-red-400' : 'bg-indigo-400'} animate-pulse`} />
-              {isEnded ? 'Meeting Ended' : 'Meeting Not Found'}
             </span>
           </div>
 
