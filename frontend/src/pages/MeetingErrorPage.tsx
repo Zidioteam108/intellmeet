@@ -6,6 +6,7 @@ const MeetingErrorPage = () => {
   const navigate = useNavigate();
   const reason = searchParams.get('reason') || 'not-found';
   const meetingId = searchParams.get('meetingId');
+  const scheduledFor = searchParams.get('scheduledFor');
 
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
@@ -14,6 +15,7 @@ const MeetingErrorPage = () => {
   }, []);
 
   const isEnded = reason === 'ended';
+  const isNotStarted = reason === 'not-started';
 
   return (
     <div className="min-h-screen bg-[#080810] flex flex-col items-center justify-center p-6 relative overflow-hidden font-sans">
@@ -28,6 +30,8 @@ const MeetingErrorPage = () => {
           style={{
             background: isEnded
               ? 'radial-gradient(circle, rgba(239,68,68,0.12) 0%, transparent 70%)'
+              : isNotStarted
+              ? 'radial-gradient(circle, rgba(245,158,11,0.12) 0%, transparent 70%)'
               : 'radial-gradient(circle, rgba(99,102,241,0.12) 0%, transparent 70%)',
           }}
         />
@@ -72,11 +76,29 @@ const MeetingErrorPage = () => {
               className={`w-24 h-24 rounded-2xl flex items-center justify-center shadow-2xl ${
                 isEnded
                   ? 'bg-red-500/10 border border-red-500/20 shadow-red-500/10'
+                  : isNotStarted
+                  ? 'bg-amber-500/10 border border-amber-500/20 shadow-amber-500/10'
                   : 'bg-indigo-500/10 border border-indigo-500/20 shadow-indigo-500/10'
               }`}
             >
               {isEnded ? (
                 /* Lock / ended icon */
+                <svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-red-400">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                </svg>
+              ) : isNotStarted ? (
+                /* Clock / not started icon */
+                <svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-amber-400">
+                  <circle cx="12" cy="12" r="10" />
+                  <polyline points="12 6 12 12 16 14" />
+                </svg>
+              ) : (
+                /* Broken link icon */
+                <svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-indigo-400">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="44"
@@ -120,6 +142,13 @@ const MeetingErrorPage = () => {
               className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-[11px] font-black uppercase tracking-widest border ${
                 isEnded
                   ? 'bg-red-500/10 border-red-500/20 text-red-400'
+                  : isNotStarted
+                  ? 'bg-amber-500/10 border-amber-500/20 text-amber-400'
+                  : 'bg-indigo-500/10 border-indigo-500/20 text-indigo-400'
+              }`}
+            >
+              <span className={`w-1.5 h-1.5 rounded-full ${isEnded ? 'bg-red-400' : isNotStarted ? 'bg-amber-400' : 'bg-indigo-400'} animate-pulse`} />
+              {isEnded ? 'Meeting Ended' : isNotStarted ? 'Meeting Not Started Yet' : 'Meeting Not Found'}
                   : 'bg-indigo-500/10 border-indigo-500/20 text-indigo-400'
               }`}
             >
@@ -132,6 +161,8 @@ const MeetingErrorPage = () => {
           <h1 className="text-2xl sm:text-3xl font-black text-white text-center mb-3 tracking-tight leading-tight">
             {isEnded
               ? 'This meeting has ended'
+              : isNotStarted
+              ? "Meeting hasn't started yet"
               : 'Meeting not found'}
           </h1>
 
@@ -139,6 +170,8 @@ const MeetingErrorPage = () => {
           <p className="text-slate-400 text-center text-sm sm:text-base font-medium leading-relaxed mb-8">
             {isEnded
               ? 'The host ended this meeting. You can view the meeting summary or start a new one.'
+              : isNotStarted
+              ? `This meeting is scheduled for a future time${scheduledFor ? ': ' + new Date(scheduledFor).toLocaleString() : ''}. Please return at the scheduled time.`
               : 'This meeting link is invalid or has been removed. Please check the link or ask the host to resend it.'}
           </p>
 

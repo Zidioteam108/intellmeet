@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { connectSocket, disconnectSocket } from '../utils/socket';
+import { getAllMeetings } from '../api/meetingsApi';
 import { getAllMeetings, endMeeting as endMeetingApi } from '../api/meetingsApi';
 import { generateSummary } from '../api/summaryApi';
 import useWebRTC from '../hooks/useWebRTC';
@@ -28,6 +29,17 @@ const VideoRoomPage = ({ initialStream, initialCameraOff = false, initialMuted =
 
   // Full-screen "meeting ended" overlay state
   const [meetingEndedOverlay, setMeetingEndedOverlay] = useState(false);
+  const [meetingEndedBy, setMeetingEndedBy] = useState<string>('');
+  const [countdown, setCountdown] = useState(5);
+  const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Track whether we've already triggered cleanup to avoid double-calls
+  const cleanedUpRef = useRef(false);
+
+  // Is the current user the host of this meeting?
+  const isHost = meetingData?.host?._id === user?.id || meetingData?.host === user?.id;
+
+  // Initialize socket — memoised so it's created once per token
   const [countdown, setCountdown] = useState(4);
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -54,6 +66,39 @@ const VideoRoomPage = ({ initialStream, initialCameraOff = false, initialMuted =
     stopScreenShare,
   } = useWebRTC(socket, roomId || '', user?.name || 'Guest', user?.avatar || '', initialStream, initialCameraOff, initialMuted);
 
+  // ── Shared cleanup + redirect after meeting ends ─────────────────────────
+  // Used by BOTH host (after End Meeting) and participants (on meeting-ended event).
+  // The host now also listens to the meeting-ended socket event — ensuring a
+  // single, unified cleanup path.
+  const handleMeetingEnd = (endedBy: string, meetingId?: string, isHostEnding = false) => {
+    if (cleanedUpRef.current) return;
+    cleanedUpRef.current = true;
+
+    leaveRoom();
+    setMeetingEndedBy(endedBy);
+    setMeetingEndedOverlay(true);
+    setCountdown(5);
+
+    let secs = 5;
+    countdownRef.current = setInterval(() => {
+      secs -= 1;
+      setCountdown(secs);
+      if (secs <= 0) {
+        clearInterval(countdownRef.current!);
+        // Host goes to summary page; participants go to meetings list
+        if (isHostEnding && meetingId) {
+          generateSummary(meetingId)
+            .then(() => navigate(`/meeting/${meetingId}/summary`))
+            .catch(() => navigate('/meetings'));
+        } else {
+          navigate('/meetings');
+        }
+      }
+    }, 1000);
+  };
+
+  // ── On page load: join room & register socket listeners ─────────────────
+
   // ─── On page load, join room ─────────────────────────────────────────────
   useEffect(() => {
     if (!accessToken || !roomId || !socket) return;
@@ -73,6 +118,8 @@ const VideoRoomPage = ({ initialStream, initialCameraOff = false, initialMuted =
         const meetId = err.response?.data?.meetingId;
         if (reason === 'ended') {
           navigate(`/meeting-error?reason=ended${meetId ? `&meetingId=${meetId}` : ''}`);
+        } else if (reason === 'not-started') {
+          navigate(`/meeting-error?reason=not-started`);
         } else if (reason === 'not-found') {
           navigate('/meeting-error?reason=not-found');
         } else {
@@ -83,6 +130,16 @@ const VideoRoomPage = ({ initialStream, initialCameraOff = false, initialMuted =
 
     join();
 
+    // ── meeting-ended: fired by io.to(roomId) — received by ALL sockets ──
+    // This is the SINGLE event path for both host and participants.
+    // The host triggers it via "End Meeting" → server broadcasts via io.to()
+    // → host socket also receives it here → unified cleanup runs.
+    socket.on('meeting-ended', ({ endedBy, meetingId }: any) => {
+      handleMeetingEnd(endedBy, meetingId, isHost);
+    });
+
+    socket.on('user-left', ({ socketId }: any) => {
+      setPinnedId((prev) => (prev === socketId ? null : prev));
     socket.on('user-left', ({ socketId }: any) => {
       setPinnedId((prev) => (prev === socketId ? null : prev));
     });
@@ -109,16 +166,33 @@ const VideoRoomPage = ({ initialStream, initialCameraOff = false, initialMuted =
       socket.off('user-left');
       socket.off('meeting-ended');
       if (countdownRef.current) clearInterval(countdownRef.current);
+      if (!cleanedUpRef.current) {
+        leaveRoom();
+      }
       leaveRoom();
       disconnectSocket();
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [roomId, accessToken, socket]);
 
+  // ── Non-host: Leave Meeting ──────────────────────────────────────────────
   // ─── Non-host: Leave Meeting ──────────────────────────────────────────────
   const handleLeave = () => {
     leaveRoom();
     navigate('/meetings');
+  };
+
+  // ── Host only: End Meeting for everyone ─────────────────────────────────
+  // Emits socket event → server updates DB + broadcasts to ALL (including host)
+  // → host receives 'meeting-ended' event like everyone else → handleMeetingEnd
+  const handleEndCall = () => {
+    if (!isHost || !socket || !roomId) return;
+    // Emit to server — server will do DB update and broadcast io.to(roomId)
+    socket.emit('end-meeting', { roomId });
+  };
+
+  const handlePin = (socketId: string) => {
+    setPinnedId((prev) => (prev === socketId ? null : socketId));
   };
 
   // ─── Host only: End Meeting for everyone ─────────────────────────────────
@@ -163,6 +237,7 @@ const VideoRoomPage = ({ initialStream, initialCameraOff = false, initialMuted =
   return (
     <div className="flex h-screen bg-[#0a0a0c] overflow-hidden font-sans selection:bg-blue-500/30">
 
+      {/* ── Meeting Ended Full-Screen Overlay ─────────────────────────────── */}
       {/* ── Meeting Ended Full-Screen Overlay ──────────────────────────────── */}
       {meetingEndedOverlay && (
         <div className="absolute inset-0 z-[200] bg-black/90 backdrop-blur-2xl flex flex-col items-center justify-center gap-6 animate-in fade-in duration-500">
@@ -177,6 +252,13 @@ const VideoRoomPage = ({ initialStream, initialCameraOff = false, initialMuted =
 
           <div className="text-center space-y-2">
             <h2 className="text-white text-2xl sm:text-3xl font-black tracking-tight">
+              Meeting Ended
+            </h2>
+            {meetingEndedBy && (
+              <p className="text-slate-400 font-medium text-sm sm:text-base">
+                {meetingEndedBy} ended this meeting for everyone.
+              </p>
+            )}
               This meeting has ended
             </h2>
             <p className="text-slate-400 font-medium text-sm sm:text-base">
@@ -195,6 +277,11 @@ const VideoRoomPage = ({ initialStream, initialCameraOff = false, initialMuted =
           </div>
 
           <button
+            id="goto-meetings-btn"
+            onClick={() => {
+              if (countdownRef.current) clearInterval(countdownRef.current);
+              navigate('/meetings');
+            }}
             onClick={() => { if (countdownRef.current) clearInterval(countdownRef.current); navigate('/meetings'); }}
             className="px-6 py-3 bg-white/5 hover:bg-white/10 border border-white/10 text-white text-sm font-bold rounded-2xl transition-all"
           >
@@ -361,6 +448,7 @@ const VideoRoomPage = ({ initialStream, initialCameraOff = false, initialMuted =
         )}
       </div>
 
+      {/* ── Right side: Chat & Participants ─────────────────────────────────── */}
       {/* ── Right side: Chat & Participants ────────────────────────────────── */}
       {showChat && (
         <div className="absolute inset-0 sm:relative sm:inset-auto z-40 w-full sm:w-96 flex-shrink-0 border-l border-white/5 bg-[#0a0a0c] sm:bg-[#121215]/50 backdrop-blur-3xl animate-in slide-in-from-right duration-500 flex flex-col">
