@@ -9,7 +9,6 @@
     "lint:fix": "eslint src/ server.js --fix",
     "format": "prettier --write src/ server.js"
   },
-
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "eslint": "^10.3.0",
@@ -35,9 +34,9 @@
     "mongoose": "^8.23.1",
     "multer": "^2.1.1",
     "multer-storage-cloudinary": "^4.0.0",
-    "nodemailer": "^8.0.7",
     "nodend": "^1.1.2-beta.2",
     "openai": "^6.37.0",
+    "resend": "^6.12.3",
     "socket.io": "^4.8.3",
     "socket.io-client": "^4.8.3"
   },
