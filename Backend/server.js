@@ -29,6 +29,24 @@ const io = new Server(server, {
   },
 });
 
+// Configure Redis Adapter for Socket.io if REDIS_URL is present
+if (process.env.REDIS_URL) {
+  const { createAdapter } = require('@socket.io/redis-adapter');
+  const Redis = require('ioredis');
+  
+  try {
+    const pubClient = new Redis(process.env.REDIS_URL, {
+      tls: process.env.REDIS_URL.includes('upstash.io') ? {} : undefined,
+    });
+    const subClient = pubClient.duplicate();
+    
+    io.adapter(createAdapter(pubClient, subClient));
+    console.log('✅ Socket.io Redis Adapter configured');
+  } catch (err) {
+    console.error('❌ Failed to configure Socket.io Redis Adapter:', err.message);
+  }
+}
+
 // Middlewares
 app.use(helmet());
 

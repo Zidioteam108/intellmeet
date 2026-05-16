@@ -271,28 +271,6 @@ const socketHandler = (io) => {
     });
 
     // ── Disconnect ───────────────────────────────────────────────────────
-    // ── End Meeting (Host Only) ─────────────────────────────────────────
-    socket.on('end-meeting', ({ roomId }) => {
-      console.log(`🛑 Meeting ended by host in room: ${roomId}`);
-      socket.to(roomId).emit('meeting-ended', { endedBy: socket.user?.name });
-    });
-
-    // ── Leave Room (explicit) ─────────────────────────────────────────────
-    socket.on('leave-room', ({ roomId }) => {
-      console.log(`👋 ${socket.user?.name} left room: ${roomId}`);
-      socket.leave(roomId);
-
-      if (rooms.has(roomId)) {
-        rooms.get(roomId).delete(socket.id);
-        if (rooms.get(roomId).size === 0) {
-          rooms.delete(roomId);
-        }
-      }
-
-      socket.to(roomId).emit('user-left', { socketId: socket.id });
-    });
-
-    // ── Disconnect ─────────────────────────────────────────────────────
     socket.on('disconnecting', () => {
       socket.rooms.forEach((roomId) => {
         if (roomId === socket.id) return; // skip personal room

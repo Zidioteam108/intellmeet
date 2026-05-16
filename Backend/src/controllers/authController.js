@@ -2,6 +2,9 @@ const User = require('../models/User');
 const { generateAccessToken, generateRefreshToken } = require('../utils/generateTokens');
 const jwt = require('jsonwebtoken');
 
+const crypto = require('crypto');
+const sendEmail = require('../utils/sendEmail');
+
 // ─────────────────────────────────────────────────────────────────────────────
 // @desc    Register a new user
 // @route   POST /api/auth/signup
@@ -35,30 +38,39 @@ const signup = async (req, res) => {
     });
   }
 
-  // 3. Create the new user (password is hashed automatically by the model hook)
-  const user = await User.create({ name, email, password });
+  // 3. Create the new user
+  const user = await User.create({ name, email, password, isVerified: false });
 
-  // 4. Generate tokens
-  const accessToken = generateAccessToken(user._id);
-  const refreshToken = generateRefreshToken(user._id);
+  // 4. Generate verification token
+  const verificationToken = crypto.randomBytes(32).toString('hex');
 
-  // 5. Save refresh token to database
-  user.refreshToken = refreshToken;
+  // Hash it and set to verificationToken field
+  user.verificationToken = crypto.createHash('sha256').update(verificationToken).digest('hex');
+  user.verificationExpire = Date.now() + 24 * 60 * 60 * 1000; // 24 hours
   await user.save({ validateBeforeSave: false });
 
-  // 6. Send response (never send password back)
+  // 5. Send verification email
+  const frontendUrl = process.env.FRONTEND_URL || req.headers.origin || 'http://localhost:5173';
+  const verifyUrl = `${frontendUrl}/verify-email/${verificationToken}`;
+
+  const message = `Welcome to IntellMeet! Please confirm your email address by clicking the link below:\n\n ${verifyUrl}`;
+
+  try {
+    await sendEmail({
+      email: user.email,
+      subject: 'Verify your IntellMeet account',
+      message,
+    });
+  } catch (err) {
+    console.error('Email failed to send:', err);
+    // Even if email fails, we create the account. User can request a new link on login.
+  }
+
+  // 6. Send response (No tokens, require verification)
   res.status(201).json({
     success: true,
-    message: 'Account created successfully',
-    accessToken,
-    refreshToken,
-    user: {
-      id: user._id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      avatar: user.avatar,
-    },
+    message: 'Account created. Please check your email to verify your account.',
+    verifyUrl: verifyUrl, // Added for UI bypass
   });
 };
 
@@ -78,16 +90,16 @@ const login = async (req, res) => {
     });
   }
 
-  // 2. Find user — explicitly include password field (it's hidden by default)
+  // 2. Find user
   const user = await User.findOne({ email }).select('+password');
   if (!user) {
     return res.status(401).json({
       success: false,
-      message: 'Invalid email or password', // Don't reveal which one is wrong
+      message: 'Invalid email or password',
     });
   }
 
-  // 3. Compare entered password with stored hashed password
+  // 3. Compare entered password
   const isPasswordMatch = await user.comparePassword(password);
   if (!isPasswordMatch) {
     return res.status(401).json({
@@ -96,23 +108,54 @@ const login = async (req, res) => {
     });
   }
 
-  // 4. Generate new tokens
+  // 4. Check if verified
+  if (!user.isVerified) {
+    // Generate a new token
+    const verificationToken = crypto.randomBytes(32).toString('hex');
+    user.verificationToken = crypto.createHash('sha256').update(verificationToken).digest('hex');
+    user.verificationExpire = Date.now() + 24 * 60 * 60 * 1000;
+    await user.save({ validateBeforeSave: false });
+
+    // Send new email
+    const frontendUrl = process.env.FRONTEND_URL || req.headers.origin || 'http://localhost:5173';
+    const verifyUrl = `${frontendUrl}/verify-email/${verificationToken}`;
+    const message = `Please confirm your email address by clicking the link below:\n\n ${verifyUrl}`;
+
+    try {
+      await sendEmail({
+        email: user.email,
+        subject: 'Verify your IntellMeet account',
+        message,
+      });
+    } catch (err) {
+      console.error('Email failed to send:', err);
+    }
+
+    return res.status(403).json({
+      success: false,
+      message: 'Account not verified. A new verification link has been sent to your email.',
+      isNotVerified: true,
+      verifyUrl: verifyUrl, // Added for UI bypass
+    });
+  }
+
+  // 5. Generate new tokens
   const accessToken = generateAccessToken(user._id);
   const refreshToken = generateRefreshToken(user._id);
 
-  // 5. Save new refresh token to database
+  // 6. Save new refresh token to database
   user.refreshToken = refreshToken;
   await user.save({ validateBeforeSave: false });
 
-  // 6. Set refresh token in an HTTP-only cookie
+  // 7. Set refresh token in an HTTP-only cookie
   res.cookie('refreshToken', refreshToken, {
     httpOnly: true,
-    secure: true, // Required for SameSite=None
-    sameSite: 'none', // Allow cross-site cookies for Vercel
-    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    secure: true,
+    sameSite: 'none',
+    maxAge: 7 * 24 * 60 * 60 * 1000,
   });
 
-  // 7. Send response
+  // 8. Send response
   res.status(200).json({
     success: true,
     message: 'Login successful',
@@ -198,9 +241,6 @@ const logout = async (req, res) => {
 // @route   POST /api/auth/forgot-password
 // @access  Public
 // ─────────────────────────────────────────────────────────────────────────────
-const crypto = require('crypto');
-const sendEmail = require('../utils/sendEmail');
-
 const forgotPassword = async (req, res) => {
   const { email } = req.body;
   if (!email) {
@@ -236,7 +276,7 @@ const forgotPassword = async (req, res) => {
       message,
     });
 
-    res.status(200).json({ success: true, message: 'Email sent' });
+    res.status(200).json({ success: true, message: 'Email sent', resetUrl: resetUrl });
   } catch (err) {
     user.resetPasswordToken = undefined;
     user.resetPasswordExpire = undefined;
@@ -283,4 +323,35 @@ const resetPassword = async (req, res) => {
   });
 };
 
-module.exports = { signup, login, refreshAccessToken, logout, forgotPassword, resetPassword };
+// ─────────────────────────────────────────────────────────────────────────────
+// @desc    Verify Email
+// @route   POST /api/auth/verify-email/:token
+// @access  Public
+// ─────────────────────────────────────────────────────────────────────────────
+const verifyEmail = async (req, res) => {
+  // Get hashed token
+  const verificationToken = crypto.createHash('sha256').update(req.params.token).digest('hex');
+
+  // Find user by token and check if it has not expired
+  const user = await User.findOne({
+    verificationToken,
+    verificationExpire: { $gt: Date.now() },
+  });
+
+  if (!user) {
+    return res.status(400).json({ success: false, message: 'Invalid or expired verification token' });
+  }
+
+  // Set as verified
+  user.isVerified = true;
+  user.verificationToken = undefined;
+  user.verificationExpire = undefined;
+  await user.save();
+
+  res.status(200).json({
+    success: true,
+    message: 'Email verified successfully. You can now log in.',
+  });
+};
+
+module.exports = { signup, login, refreshAccessToken, logout, forgotPassword, resetPassword, verifyEmail };

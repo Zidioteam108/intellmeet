@@ -20,6 +20,7 @@ import useAuthInit from './hooks/useAuthInit';
 import { useAuthStore } from './store/authStore';
 import ForgotPasswordPage from './pages/ForgotPasswordPage'
 import ResetPasswordPage from './pages/ResetPasswordPage'
+import VerifyEmailPage from './pages/VerifyEmailPage'
 
 function App() {
   const location = useLocation()
@@ -29,7 +30,7 @@ function App() {
 
   useEffect(() => {
     // Show preloader when navigating to specified auth routes
-    const authRoutes = ['/login', '/signup', '/forgot-password', '/reset-password']
+    const authRoutes = ['/login', '/signup', '/forgot-password', '/reset-password', '/verify-email']
     
     // Check if path starts with any of the auth routes
     if (authRoutes.some(route => location.pathname.startsWith(route))) {
@@ -58,6 +59,7 @@ function App() {
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
+          <Route path="/verify-email/:token" element={<VerifyEmailPage />} />
           {/* Public error page — no auth required so bad links still show the right message */}
           <Route path="/meeting-error" element={<MeetingErrorPage />} />
 

@@ -12,6 +12,7 @@ const ForgotPasswordPage = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
+  const [mockResetUrl, setMockResetUrl] = useState('')
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -24,7 +25,10 @@ const ForgotPasswordPage = () => {
 
     setIsLoading(true)
     try {
-      await api.post('/auth/forgot-password', { email })
+      const response = await api.post('/auth/forgot-password', { email })
+      if (response.data.resetUrl) {
+        setMockResetUrl(response.data.resetUrl)
+      }
       setSuccess(true)
     } catch (err: any) {
       setError(err.response?.data?.message || 'Something went wrong. Please try again.')
@@ -109,6 +113,17 @@ const ForgotPasswordPage = () => {
                   <p className="text-sm font-medium">
                     If an account exists for <span className="font-bold">{email}</span>, you will receive a password reset link shortly.
                   </p>
+                  
+                  {mockResetUrl && (
+                    <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-2xl text-left">
+                      <p className="text-xs font-bold text-yellow-800 uppercase tracking-wider mb-2">Dev Mode: Direct Reset</p>
+                      <a href={mockResetUrl} target="_blank" rel="noopener noreferrer">
+                        <Button type="button" className="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-bold">
+                          Click to Reset Password
+                        </Button>
+                      </a>
+                    </div>
+                  )}
                 </div>
                 
                 <Link to="/login" className="block text-center mt-8">

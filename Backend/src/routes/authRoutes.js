@@ -2,14 +2,14 @@ const express = require('express');
 const router = express.Router();
 const rateLimit = require('express-rate-limit');
 const { body } = require('express-validator');
-const { signup, login, refreshAccessToken, logout, forgotPassword, resetPassword } = require('../controllers/authController');
+const { signup, login, refreshAccessToken, logout, forgotPassword, resetPassword, verifyEmail } = require('../controllers/authController');
 const { protect } = require('../middleware/authMiddleware');
 const validateRequest = require('../middleware/validateRequest');
 
-// Rate limiter — allows only 10 attempts per 15 minutes on auth routes
+// Rate limiter — allows only 100 attempts per 15 minutes on auth routes (Increased for testing)
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 10,
+  max: 100,
   message: {
     success: false,
     message: 'Too many attempts. Please try again after 15 minutes.',
@@ -50,6 +50,7 @@ router.post('/refresh', refreshAccessToken);
 router.post('/logout', logout);
 router.post('/forgot-password', authLimiter, forgotPassword);
 router.post('/reset-password/:token', authLimiter, resetPassword);
+router.post('/verify-email/:token', authLimiter, verifyEmail);
 
 // Protected test route
 router.get('/me', protect, async (req, res) => {

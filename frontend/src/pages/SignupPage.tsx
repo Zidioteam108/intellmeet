@@ -17,6 +17,8 @@ const SignupPage = () => {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
+  const [success, setSuccess] = useState(false)
+  const [mockVerifyUrl, setMockVerifyUrl] = useState('')
   const location = useLocation()
   const returnUrl = new URLSearchParams(location.search).get('returnUrl') || ''
 
@@ -45,12 +47,11 @@ const SignupPage = () => {
         password,
       })
 
-      const { user, accessToken } = response.data
-      setAuth(user, accessToken)
-      
-      const searchParams = new URLSearchParams(location.search)
-      const returnUrl = searchParams.get('returnUrl') || '/dashboard'
-      navigate(returnUrl)
+      // Store the mock URL and show success screen asking to check email
+      if (response.data.verifyUrl) {
+        setMockVerifyUrl(response.data.verifyUrl)
+      }
+      setSuccess(true)
     } catch (err: any) {
       setError(err.response?.data?.message || 'Signup failed. Please try again.')
     } finally {
@@ -90,6 +91,36 @@ const SignupPage = () => {
               <p className="text-slate-500 font-medium">Join the future of intelligent meetings</p>
             </div>
 
+            {success ? (
+              <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <div className="bg-indigo-50 border border-indigo-100 text-indigo-800 p-6 rounded-3xl text-center space-y-4">
+                  <div className="mx-auto w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-sm text-indigo-600 mb-4">
+                    <Mail className="w-8 h-8" />
+                  </div>
+                  <h3 className="font-black text-xl text-indigo-900">Verify your email</h3>
+                  <p className="text-sm font-medium">
+                    We've sent a verification link to <span className="font-bold">{email}</span>. Please click the link to activate your account before logging in.
+                  </p>
+                  
+                  {mockVerifyUrl && (
+                    <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-2xl text-left">
+                      <p className="text-xs font-bold text-yellow-800 uppercase tracking-wider mb-2">Dev Mode: Direct Verification</p>
+                      <a href={mockVerifyUrl} target="_blank" rel="noopener noreferrer">
+                        <Button className="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-bold">
+                          Click to Verify Account
+                        </Button>
+                      </a>
+                    </div>
+                  )}
+                </div>
+                
+                <Link to="/login" className="block text-center mt-8">
+                  <Button variant="outline" className="w-full py-7 rounded-2xl font-black text-slate-700 bg-white border-slate-200 hover:bg-slate-50 hover:text-indigo-600 transition-standard">
+                    Go to Login
+                  </Button>
+                </Link>
+              </div>
+            ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
               
               {error && (
@@ -188,6 +219,7 @@ const SignupPage = () => {
                 <div className="absolute inset-0 bg-gradient-to-r from-indigo-600 to-purple-600 opacity-0 group-hover:opacity-100 transition-opacity"></div>
               </Button>
             </form>
+            )}
 
             <p className="mt-8 text-center text-slate-500 font-medium">
               Already have an account?{' '}

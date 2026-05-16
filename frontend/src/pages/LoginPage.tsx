@@ -15,6 +15,8 @@ const LoginPage = () => {
   const [password, setPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
+  const [isNotVerified, setIsNotVerified] = useState(false)
+  const [mockVerifyUrl, setMockVerifyUrl] = useState('')
   const location = useLocation()
   const returnUrl = new URLSearchParams(location.search).get('returnUrl') || ''
 
@@ -41,7 +43,15 @@ const LoginPage = () => {
       const returnUrl = searchParams.get('returnUrl') || '/dashboard'
       navigate(returnUrl)
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Login failed. Please check your credentials.')
+      if (err.response?.data?.isNotVerified) {
+        setIsNotVerified(true)
+        if (err.response.data.verifyUrl) {
+          setMockVerifyUrl(err.response.data.verifyUrl)
+        }
+        setError('')
+      } else {
+        setError(err.response?.data?.message || 'Login failed. Please check your credentials.')
+      }
     } finally {
       setIsLoading(false)
     }
@@ -116,6 +126,25 @@ const LoginPage = () => {
 
             <form onSubmit={handleSubmit} className="space-y-6">
               
+              {isNotVerified && (
+                <div className="bg-indigo-50 border border-indigo-100 text-indigo-800 px-5 py-4 rounded-2xl text-sm font-bold flex flex-col gap-3">
+                  <div className="flex items-start gap-3">
+                    <div className="mt-0.5"><Mail className="w-5 h-5 text-indigo-600" /></div>
+                    <p>Account not verified. We've sent a new verification link to your email. Please check your inbox.</p>
+                  </div>
+                  {mockVerifyUrl && (
+                    <div className="mt-2 p-3 bg-yellow-50 border border-yellow-200 rounded-xl text-left">
+                      <p className="text-[10px] font-bold text-yellow-800 uppercase tracking-wider mb-1.5">Dev Mode</p>
+                      <a href={mockVerifyUrl} target="_blank" rel="noopener noreferrer">
+                        <Button type="button" className="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-bold h-9 text-xs">
+                          Click to Verify
+                        </Button>
+                      </a>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {error && (
                 <div className="bg-red-50 border border-red-100 text-red-600 px-5 py-4 rounded-2xl text-sm font-bold flex items-center gap-3 animate-shake">
                   <div className="w-2 h-2 rounded-full bg-red-600 animate-pulse"></div>
