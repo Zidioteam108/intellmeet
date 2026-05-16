@@ -1,5 +1,6 @@
 console.log('🚀 SERVER FILE INITIALIZING...');
-require('dotenv').config();
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, 'Backend', '.env') });
 require('express-async-errors');
 const express = require('express');
 const cors = require('cors');

@@ -1,15 +1,11 @@
 const nodemailer = require('nodemailer');
 
 const sendEmail = async (options) => {
-  // If SMTP config is missing, log to console for development/testing
+  // If SMTP config is missing, throw an error instead of silently failing
   if (!process.env.SMTP_HOST || !process.env.SMTP_PORT || !process.env.SMTP_EMAIL || !process.env.SMTP_PASSWORD) {
-    console.log('---------------------------------------------------------');
-    console.log('✉️  EMAIL SIMULATION (SMTP not configured in .env)');
-    console.log(`To: ${options.email}`);
-    console.log(`Subject: ${options.subject}`);
-    console.log(`Message: \n${options.message}`);
-    console.log('---------------------------------------------------------');
-    return;
+    const errorMsg = 'SMTP configuration is missing in .env. Cannot send email.';
+    console.error(`❌ ${errorMsg}`);
+    throw new Error(errorMsg);
   }
 
   // Create transporter with real SMTP settings
