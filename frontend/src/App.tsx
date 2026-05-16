@@ -13,12 +13,13 @@ import VideoRoomPage from './pages/VideoRoomPage'
 import PostMeetingPage from './pages/PostMeetingPage'
 import MeetingErrorPage from './pages/MeetingErrorPage'
 import PreJoinPage from './pages/PreJoinPage'
-
 import KanbanPage from './pages/KanbanPage'
 import AnalyticsPage from './pages/AnalyticsPage'
 
 import useAuthInit from './hooks/useAuthInit';
 import { useAuthStore } from './store/authStore';
+import ForgotPasswordPage from './pages/ForgotPasswordPage'
+import ResetPasswordPage from './pages/ResetPasswordPage'
 
 function App() {
   const location = useLocation()
@@ -28,9 +29,10 @@ function App() {
 
   useEffect(() => {
     // Show preloader when navigating to specified auth routes
-    const authRoutes = ['/login', '/signup']
+    const authRoutes = ['/login', '/signup', '/forgot-password', '/reset-password']
     
-    if (authRoutes.includes(location.pathname)) {
+    // Check if path starts with any of the auth routes
+    if (authRoutes.some(route => location.pathname.startsWith(route))) {
       setIsPreloading(true)
       const timer = setTimeout(() => {
         setIsPreloading(false)
@@ -54,6 +56,8 @@ function App() {
           <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
           {/* Public error page — no auth required so bad links still show the right message */}
           <Route path="/meeting-error" element={<MeetingErrorPage />} />
 

@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const rateLimit = require('express-rate-limit');
 const { body } = require('express-validator');
-const { signup, login, refreshAccessToken, logout } = require('../controllers/authController');
+const { signup, login, refreshAccessToken, logout, forgotPassword, resetPassword } = require('../controllers/authController');
 const { protect } = require('../middleware/authMiddleware');
 const validateRequest = require('../middleware/validateRequest');
 
@@ -48,6 +48,8 @@ router.post('/signup', authLimiter, signupValidation, validateRequest, signup);
 router.post('/login', authLimiter, loginValidation, validateRequest, login);
 router.post('/refresh', refreshAccessToken);
 router.post('/logout', logout);
+router.post('/forgot-password', authLimiter, forgotPassword);
+router.post('/reset-password/:token', authLimiter, resetPassword);
 
 // Protected test route
 router.get('/me', protect, async (req, res) => {
