@@ -1,5 +1,6 @@
 # IntellMeet — AI-Powered Enterprise Meeting Collaboration Platform
 
+
 ![IntellMeet Banner](frontend/src/assets/logo.png)
 
 > 🌐 **Live Demo:** [https://intellmeet-six.vercel.app](https://intellmeet-six.vercel.app)  
