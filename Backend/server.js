@@ -53,6 +53,9 @@ app.use(helmet());
 // Strict CORS for Production
 const allowedOrigins = [
   process.env.CLIENT_URL,
+  ...(process.env.CLIENT_URL ? process.env.CLIENT_URL.split(',') : []),
+  'https://www.clarityadvisors.store',
+  'https://clarityadvisors.store',
   'http://localhost:5173',
   'http://localhost:3000'
 ].filter(Boolean);
