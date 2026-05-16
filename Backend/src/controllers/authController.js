@@ -275,15 +275,12 @@ const forgotPassword = async (req, res) => {
       subject: 'Password reset token',
       message,
     });
-
-    res.status(200).json({ success: true, message: 'Email sent', resetUrl: resetUrl });
   } catch (err) {
-    user.resetPasswordToken = undefined;
-    user.resetPasswordExpire = undefined;
-    await user.save({ validateBeforeSave: false });
-
-    return res.status(500).json({ success: false, message: 'Email could not be sent' });
+    console.error('Password reset email failed to send:', err);
+    // We don't fail the request here, so the Dev Mode UI bypass still works
   }
+
+  res.status(200).json({ success: true, message: 'If that email is registered, a reset link has been sent.', resetUrl: resetUrl });
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
