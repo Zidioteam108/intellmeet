@@ -6,8 +6,13 @@ interface Props {
 }
 
 const ProtectedRoute = ({ children }: Props) => {
-  const { isAuthenticated } = useAuthStore()
+  const { isAuthenticated, isLoading } = useAuthStore()
   const location = useLocation()
+
+  // Wait for auth initialization to complete before deciding to redirect
+  if (isLoading) {
+    return null; // The global Preloader in App.tsx will be shown during this time
+  }
 
   // If not logged in, redirect to login page with returnUrl
   if (!isAuthenticated) {
