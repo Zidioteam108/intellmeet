@@ -379,14 +379,29 @@ const useWebRTC = (
       });
       const screenTrack = screenStream.getVideoTracks()[0];
 
+      // Replace the video track on all existing peer connections
       peerConnections.current.forEach((pc) => {
         const sender = pc.getSenders().find((s) => s.track?.kind === 'video');
         if (sender) sender.replaceTrack(screenTrack);
       });
 
-      setLocalStream(screenStream);
+      // Construct a new local stream combining the existing audio and the new screen video
+      const newLocalStream = new MediaStream();
+      const currentStream = localStreamRef.current;
+      
+      if (currentStream) {
+        currentStream.getAudioTracks().forEach(track => newLocalStream.addTrack(track));
+        // We do not stop the camera track here, so it can be resumed quickly if needed,
+        // but it won't be transmitted since we replaced it on the senders.
+      }
+      newLocalStream.addTrack(screenTrack);
+
+      setLocalStream(newLocalStream);
+      // CRITICAL: update the ref so any NEW peers that join get the screen share + audio
+      localStreamRef.current = newLocalStream;
       setIsScreenSharing(true);
 
+      // Listen for the user clicking "Stop Sharing" on the browser's native banner
       screenTrack.onended = () => {
         stopScreenShare();
       };
@@ -396,17 +411,35 @@ const useWebRTC = (
   }, []);
 
   const stopScreenShare = useCallback(async () => {
-    const cameraStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-    const cameraTrack = cameraStream.getVideoTracks()[0];
+    try {
+      // Re-acquire camera stream (video only, we already have audio)
+      const cameraStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+      const cameraTrack = cameraStream.getVideoTracks()[0];
 
-    peerConnections.current.forEach((pc) => {
-      const sender = pc.getSenders().find((s) => s.track?.kind === 'video');
-      if (sender) sender.replaceTrack(cameraTrack);
-    });
+      // Replace the screen track with the camera track on all existing peers
+      peerConnections.current.forEach((pc) => {
+        const sender = pc.getSenders().find((s) => s.track?.kind === 'video');
+        if (sender) sender.replaceTrack(cameraTrack);
+      });
 
-    setLocalStream(cameraStream);
-    localStreamRef.current = cameraStream;
-    setIsScreenSharing(false);
+      // Construct a new local stream combining existing audio and new camera video
+      const newLocalStream = new MediaStream();
+      const currentStream = localStreamRef.current;
+      
+      if (currentStream) {
+        currentStream.getAudioTracks().forEach(track => newLocalStream.addTrack(track));
+        // Stop the screen share track
+        currentStream.getVideoTracks().forEach(track => track.stop());
+      }
+      newLocalStream.addTrack(cameraTrack);
+
+      setLocalStream(newLocalStream);
+      // CRITICAL: update the ref so new peers get the camera + audio
+      localStreamRef.current = newLocalStream;
+      setIsScreenSharing(false);
+    } catch (err) {
+      console.error('Stop screen share error:', err);
+    }
   }, []);
 
   // ─────────────────────────────────────────────────────────────────────────
