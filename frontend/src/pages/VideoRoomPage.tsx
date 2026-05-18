@@ -14,6 +14,7 @@ interface Props {
   initialStream?: MediaStream | null;
   initialCameraOff?: boolean;
   initialMuted?: boolean;
+  roomIdOverride?: string;
 }
 
 interface MeetingData {
@@ -45,8 +46,9 @@ interface UserLeftPayload {
   socketId: string;
 }
 
-const VideoRoomPage = ({ initialStream, initialCameraOff = false, initialMuted = false }: Props) => {
-  const { roomId } = useParams<{ roomId: string }>();
+const VideoRoomPage = ({ initialStream, initialCameraOff = false, initialMuted = false, roomIdOverride }: Props) => {
+  const { roomId: routeRoomId } = useParams<{ roomId: string }>();
+  const roomId = roomIdOverride || routeRoomId;
   const navigate = useNavigate();
   const { user, accessToken } = useAuthStore();
 

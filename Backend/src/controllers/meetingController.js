@@ -2,6 +2,29 @@ const Meeting = require('../models/Meeting');
 const generateRoomId = require('../utils/generateRoomId');
 const { setCache, getCache, deleteCache } = require('../utils/cache');
 
+const getClientUrl = (req) => {
+  const requestOrigin = req.get('origin');
+  if (requestOrigin) return requestOrigin.replace(/\/$/, '');
+
+  const configuredUrl = process.env.CLIENT_URL?.split(',')[0]?.trim();
+  if (configuredUrl) return configuredUrl.replace(/\/$/, '');
+
+  const protocol = req.get('x-forwarded-proto') || req.protocol;
+  const host = req.get('host');
+  return `${protocol}://${host}`;
+};
+
+const attachMeetingLinks = (meeting, req) => {
+  const meetingObject = meeting.toObject ? meeting.toObject() : meeting;
+  const clientUrl = getClientUrl(req);
+
+  return {
+    ...meetingObject,
+    inviteLink: `${clientUrl}/room/${meetingObject.roomId}`,
+    joinUrl: `${clientUrl}/room/${meetingObject.roomId}`,
+  };
+};
+
 // ── Create Meeting ─────────────────────────────────────────────────────────
 const createMeeting = async (req, res) => {
   const { title, description, scheduledFor, scheduledEndAt } = req.body;
@@ -35,10 +58,14 @@ const createMeeting = async (req, res) => {
   // Clear cache so user sees fresh meetings list
   await deleteCache(`meetings:user:${req.user._id}`);
 
+  const meetingWithLinks = attachMeetingLinks(meeting, req);
+
   res.status(201).json({
     success: true,
     message: 'Meeting created successfully',
-    meeting,
+    meeting: meetingWithLinks,
+    inviteLink: meetingWithLinks.inviteLink,
+    joinUrl: meetingWithLinks.joinUrl,
   });
 };
 
@@ -119,7 +146,9 @@ const updateMeeting = async (req, res) => {
 const joinMeeting = async (req, res) => {
   const { roomId } = req.params;
 
-  const meeting = await Meeting.findOne({ roomId })
+  const meeting = await Meeting.findOne({
+    $or: [{ roomId }, { _id: roomId.match(/^[0-9a-fA-F]{24}$/) ? roomId : null }],
+  })
     .populate('host', 'name email avatar')
     .populate('participants', 'name email avatar');
 
@@ -170,6 +199,8 @@ const joinMeeting = async (req, res) => {
   res.status(200).json({
     success: true,
     message: 'Joined meeting successfully',
+    roomId: updatedMeeting.roomId,
+    inviteLink: attachMeetingLinks(updatedMeeting, req).inviteLink,
     meeting: updatedMeeting,
   });
 };

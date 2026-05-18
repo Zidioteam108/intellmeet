@@ -4,6 +4,17 @@ import { useAuthStore } from '../store/authStore';
 import { joinMeeting as joinMeetingApi } from '../api/meetingsApi';
 import VideoRoomPage from './VideoRoomPage';
 
+interface JoinMeetingError {
+  response?: {
+    status?: number;
+    data?: {
+      reason?: string;
+      meetingId?: string;
+      message?: string;
+    };
+  };
+}
+
 const PreJoinPage = () => {
   const { roomId } = useParams<{ roomId: string }>();
   const navigate = useNavigate();
@@ -18,6 +29,7 @@ const PreJoinPage = () => {
   const [error, setError] = useState('');
   const [mounted, setMounted] = useState(false);
   const [meetingTitle, setMeetingTitle] = useState<string>('');
+  const [canonicalRoomId, setCanonicalRoomId] = useState<string | null>(null);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -90,15 +102,17 @@ const PreJoinPage = () => {
     try {
       const data = await joinMeetingApi(roomId);
       if (data?.meeting?.title) setMeetingTitle(data.meeting.title);
+      setCanonicalRoomId(data?.meeting?.roomId || data?.roomId || roomId);
       // Success — enter the room (stream stays alive)
       setHasJoined(true);
-    } catch (err: any) {
-      const res = err.response?.data;
+    } catch (err: unknown) {
+      const joinError = err as JoinMeetingError;
+      const res = joinError.response?.data;
       if (res?.reason === 'ended') {
         navigate(`/meeting-error?reason=ended${res?.meetingId ? `&meetingId=${res.meetingId}` : ''}`);
         return;
       }
-      if (res?.reason === 'not-found' || err.response?.status === 404) {
+      if (res?.reason === 'not-found' || joinError.response?.status === 404) {
         navigate('/meeting-error?reason=not-found');
         return;
       }
@@ -116,7 +130,14 @@ const PreJoinPage = () => {
 
   // ─── If already joined, hand off to VideoRoomPage ─────────────────────────
   if (hasJoined) {
-    return <VideoRoomPage initialStream={streamRef.current} initialCameraOff={isCameraOff} initialMuted={isMuted} />;
+    return (
+      <VideoRoomPage
+        initialStream={localStream}
+        initialCameraOff={isCameraOff}
+        initialMuted={isMuted}
+        roomIdOverride={canonicalRoomId || roomId}
+      />
+    );
   }
 
   // ─── Pre-join UI ──────────────────────────────────────────────────────────
