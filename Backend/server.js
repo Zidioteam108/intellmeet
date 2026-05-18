@@ -19,6 +19,7 @@ const profileRoutes = require('./src/routes/profileRoutes');
 const chatRoutes = require('./src/routes/chatRoutes');
 
 const app = express();
+app.set('trust proxy', 1);
 const server = http.createServer(app);
 
 // Socket.io setup

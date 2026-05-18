@@ -113,13 +113,18 @@ const socketHandler = (io) => {
     // ── Join Room ────────────────────────────────────────────────────────
     // ── Join Room ──────────────────────────────────────────────────────
     socket.on('join-room', ({ roomId, userName, avatar, isCameraOff }) => {
+      if (!roomId) {
+        return socket.emit('error', { message: 'Room ID is required' });
+      }
+
       const userId = socket.user?._id?.toString();
       socket.join(roomId);
+
+      removeFromRoom(socket, roomId);
 
       if (!rooms.has(roomId)) {
         rooms.set(roomId, new Set());
       }
-      removeFromRoom(socket, roomId);
       rooms.get(roomId).add({ socketId: socket.id, userId, userName });
 
       // Cancel any pending auto-expire for this room
