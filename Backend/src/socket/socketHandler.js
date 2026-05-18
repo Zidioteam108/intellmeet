@@ -112,12 +112,14 @@ const socketHandler = (io) => {
 
     // ── Join Room ────────────────────────────────────────────────────────
     // ── Join Room ──────────────────────────────────────────────────────
-    socket.on('join-room', ({ roomId, userId, userName, avatar, isCameraOff }) => {
+    socket.on('join-room', ({ roomId, userName, avatar, isCameraOff }) => {
+      const userId = socket.user?._id?.toString();
       socket.join(roomId);
 
       if (!rooms.has(roomId)) {
         rooms.set(roomId, new Set());
       }
+      removeFromRoom(socket, roomId);
       rooms.get(roomId).add({ socketId: socket.id, userId, userName });
 
       // Cancel any pending auto-expire for this room
@@ -200,6 +202,10 @@ const socketHandler = (io) => {
     // ── Camera On/Off Status ───────────────────────────────────────────
     socket.on('toggle-camera', ({ roomId, isCameraOff }) => {
       socket.to(roomId).emit('user-camera-toggle', { socketId: socket.id, isCameraOff });
+    });
+
+    socket.on('toggle-screen-share', ({ roomId, isScreenSharing }) => {
+      socket.to(roomId).emit('user-screen-share-toggle', { socketId: socket.id, isScreenSharing });
     });
 
     // ── End Meeting (Host Only) — PRODUCTION GRADE ───────────────────────

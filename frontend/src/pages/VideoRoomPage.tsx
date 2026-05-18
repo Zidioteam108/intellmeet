@@ -16,6 +16,35 @@ interface Props {
   initialMuted?: boolean;
 }
 
+interface MeetingData {
+  _id?: string;
+  roomId: string;
+  title?: string;
+  host?: string | { _id?: string };
+}
+
+interface MeetingsResponse {
+  meetings: MeetingData[];
+}
+
+interface ApiError {
+  response?: {
+    data?: {
+      reason?: string;
+      meetingId?: string;
+    };
+  };
+}
+
+interface MeetingEndedPayload {
+  endedBy: string;
+  meetingId?: string;
+}
+
+interface UserLeftPayload {
+  socketId: string;
+}
+
 const VideoRoomPage = ({ initialStream, initialCameraOff = false, initialMuted = false }: Props) => {
   const { roomId } = useParams<{ roomId: string }>();
   const navigate = useNavigate();
@@ -23,7 +52,7 @@ const VideoRoomPage = ({ initialStream, initialCameraOff = false, initialMuted =
 
   const [hasJoined, setHasJoined] = useState(false);
   const [showChat, setShowChat] = useState(false);
-  const [meetingData, setMeetingData] = useState<any>(null);
+  const [meetingData, setMeetingData] = useState<MeetingData | null>(null);
   const [pinnedId, setPinnedId] = useState<string | null>(null);
 
   // Full-screen "meeting ended" overlay state
@@ -36,7 +65,8 @@ const VideoRoomPage = ({ initialStream, initialCameraOff = false, initialMuted =
   const cleanedUpRef = useRef(false);
 
   // Is the current user the host of this meeting?
-  const isHost = meetingData?.host?._id === user?.id || meetingData?.host === user?.id;
+  const meetingHostId = typeof meetingData?.host === 'string' ? meetingData.host : meetingData?.host?._id;
+  const isHost = meetingHostId === user?.id;
 
   // Initialize socket — memoised so it's created once per token
   const socket = useMemo(() => {
@@ -98,12 +128,13 @@ const VideoRoomPage = ({ initialStream, initialCameraOff = false, initialMuted =
         await joinRoom();
         setHasJoined(true);
 
-        const meetings = await getAllMeetings();
-        const current = meetings.meetings.find((m: any) => m.roomId === roomId);
+        const meetings = await getAllMeetings() as MeetingsResponse;
+        const current = meetings.meetings.find((m) => m.roomId === roomId);
         if (current) setMeetingData(current);
-      } catch (err: any) {
-        const reason = err.response?.data?.reason;
-        const meetId = err.response?.data?.meetingId;
+      } catch (err: unknown) {
+        const apiError = err as ApiError;
+        const reason = apiError.response?.data?.reason;
+        const meetId = apiError.response?.data?.meetingId;
         if (reason === 'ended') {
           navigate(`/meeting-error?reason=ended${meetId ? `&meetingId=${meetId}` : ''}`);
         } else if (reason === 'not-started') {
@@ -122,11 +153,11 @@ const VideoRoomPage = ({ initialStream, initialCameraOff = false, initialMuted =
     // This is the SINGLE event path for both host and participants.
     // The host triggers it via "End Meeting" → server broadcasts via io.to()
     // → host socket also receives it here → unified cleanup runs.
-    socket.on('meeting-ended', ({ endedBy, meetingId }: any) => {
+    socket.on('meeting-ended', ({ endedBy, meetingId }: MeetingEndedPayload) => {
       handleMeetingEnd(endedBy, meetingId, isHost);
     });
 
-    socket.on('user-left', ({ socketId }: any) => {
+    socket.on('user-left', ({ socketId }: UserLeftPayload) => {
       setPinnedId((prev) => (prev === socketId ? null : prev));
     });
 
@@ -337,7 +368,7 @@ const VideoRoomPage = ({ initialStream, initialCameraOff = false, initialMuted =
               stream={localStream}
               label={`${user?.name || 'You'} (You)`}
               isMuted={true}
-              isCameraOff={isCameraOff}
+              isCameraOff={isCameraOff && !isScreenSharing}
               isScreenShare={isScreenSharing}
               isPinned={pinnedId === 'local'}
               onPin={() => handlePin('local')}
@@ -353,7 +384,8 @@ const VideoRoomPage = ({ initialStream, initialCameraOff = false, initialMuted =
                 isPinned={pinnedId === remote.socketId}
                 onPin={() => handlePin(remote.socketId)}
                 avatar={remote.avatar}
-                isCameraOff={remote.isCameraOff}
+                isCameraOff={remote.isCameraOff && !remote.isScreenSharing}
+                isScreenShare={remote.isScreenSharing}
               />
             ))}
           </div>
