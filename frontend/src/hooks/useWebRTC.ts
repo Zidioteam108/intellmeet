@@ -101,6 +101,7 @@ const useWebRTC = (
   const localStreamRef = useRef<MediaStream | null>(initialStream ?? null);
   const cameraTrackRef = useRef<MediaStreamTrack | null>(initialStream?.getVideoTracks()[0] ?? null);
   const screenTrackRef = useRef<MediaStreamTrack | null>(null);
+  const isScreenSharingRef = useRef(false);
   const joinedRef = useRef(false);
 
   const userNameRef = useRef(userName);
@@ -284,22 +285,22 @@ const useWebRTC = (
   }, [socket]);
 
   const replaceVideoTrackForAllPeers = useCallback(async (track: MediaStreamTrack | null) => {
-    const renegotiations: Promise<void>[] = [];
+    const updates: Promise<void>[] = [];
 
     peerConnections.current.forEach((pc, socketId) => {
       const sender = getVideoSender(pc);
       if (sender) {
-        sender.replaceTrack(track);
+        updates.push(sender.replaceTrack(track));
         return;
       }
 
       if (track && localStreamRef.current) {
         pc.addTrack(track, localStreamRef.current);
-        renegotiations.push(renegotiatePeer(socketId));
+        updates.push(renegotiatePeer(socketId));
       }
     });
 
-    await Promise.all(renegotiations);
+    await Promise.all(updates);
   }, [renegotiatePeer]);
 
   useEffect(() => {
@@ -447,11 +448,17 @@ const useWebRTC = (
   }, [roomId, socket]);
 
   const toggleCamera = useCallback(() => {
-    const stream = localStreamRef.current;
-    if (!stream) return;
-
     const nextCameraOff = !isCameraOffRef.current;
-    stream.getVideoTracks().forEach((track) => { track.enabled = !nextCameraOff; });
+    const cameraTrack = cameraTrackRef.current;
+
+    if (cameraTrack?.readyState === 'live') {
+      cameraTrack.enabled = !nextCameraOff;
+    } else if (!isScreenSharingRef.current) {
+      localStreamRef.current?.getVideoTracks().forEach((track) => {
+        track.enabled = !nextCameraOff;
+      });
+    }
+
     isCameraOffRef.current = nextCameraOff;
     setIsCameraOff(nextCameraOff);
     socket?.emit('toggle-camera', { roomId, isCameraOff: nextCameraOff });
@@ -459,7 +466,10 @@ const useWebRTC = (
 
   const stopScreenShare = useCallback(async () => {
     const screenTrack = screenTrackRef.current;
+    if (!screenTrack && !isScreenSharingRef.current) return;
+
     screenTrackRef.current = null;
+    isScreenSharingRef.current = false;
 
     let cameraTrack = cameraTrackRef.current;
     if (!cameraTrack || cameraTrack.readyState !== 'live') {
@@ -496,6 +506,7 @@ const useWebRTC = (
       }
 
       screenTrackRef.current = screenTrack;
+      isScreenSharingRef.current = true;
       await replaceVideoTrackForAllPeers(screenTrack);
 
       const nextStream = new MediaStream();
@@ -507,7 +518,9 @@ const useWebRTC = (
       socket?.emit('toggle-screen-share', { roomId, isScreenSharing: true });
 
       screenTrack.onended = () => {
-        void stopScreenShare();
+        if (screenTrackRef.current === screenTrack) {
+          void stopScreenShare();
+        }
       };
     } catch (error) {
       console.error('Screen share error:', error);
@@ -518,6 +531,7 @@ const useWebRTC = (
     joinedRef.current = false;
     screenTrackRef.current?.stop();
     screenTrackRef.current = null;
+    isScreenSharingRef.current = false;
     localStreamRef.current?.getTracks().forEach((track) => track.stop());
     peerConnections.current.forEach((pc) => pc.close());
     reconnectTimers.current.forEach((timer) => clearTimeout(timer));
